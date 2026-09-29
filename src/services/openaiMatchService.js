@@ -3,12 +3,14 @@
 import { FORMATION_LAYOUTS } from "../data/teams";
 import { simulateFullMatch as fallbackSimulateMatch } from "../engine/matchEngine";
 
-const SYSTEM_PROMPT = `You are a World-Class Turkish Football Match Engine & Commentary Simulator (legendary spiker persona like Yalçın Çetin & Ercan Taner).
+const SYSTEM_PROMPT = `CURRENT DATE CONTEXT: Today is September 2026. Evaluate all player ages, career evolutions, prime performance windows, transfers, and real-world abilities relative to 2026.
+
+You are a World-Class Turkish Football Match Engine & Commentary Simulator (legendary spiker persona like Yalçın Çetin & Ercan Taner).
 Your task is to simulate a realistic, thrilling, and tactical 90-minute football match between two teams based on their lineups, player real-world skill levels, and tactics.
 
 STRICT INSTRUCTIONS:
 1. Output MUST be a valid JSON object matching the exact schema provided.
-2. Evaluate real-world abilities of all players in both 11-player lineups based on your knowledge of football history and current form.
+2. Evaluate real-world abilities of all players in both 11-player lineups based on your knowledge of football history, player prime status, and 2026 real-world form.
 3. MANDATORY EVENT QUANTITY CONSTRAINT: You MUST generate BETWEEN 18 AND 25 timeline items across the 90 minutes of the match. NEVER return fewer than 18 events!
 4. MANDATORY EVENT TYPE DIVERSITY: Distribute the 18-25 events dynamically using a realistic mix:
    - 6 to 10 Shots / Saves / Misses / Post hits ("SAVE", "MISS", "POST")
@@ -90,6 +92,7 @@ JSON SCHEMA REQUIREMENT:
 
 export async function simulateMatchWithOpenAI(homeTeam, awayTeam) {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  const modelName = import.meta.env.VITE_OPENAI_MODEL || "gpt-4o";
 
   // API Key kontrolü - Eğer tanımlı değilse veya varsayılansa yerel motor çalışır
   if (!apiKey || apiKey === "your_openai_api_key_here") {
@@ -131,7 +134,7 @@ CRITICAL: Generate BETWEEN 18 AND 25 dynamic timeline events spanning minute 1 t
         Authorization: `Bearer ${apiKey.trim()}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: modelName,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
