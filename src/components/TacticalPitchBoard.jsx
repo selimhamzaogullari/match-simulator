@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { FORMATION_LAYOUTS } from '../data/teams';
-import { ArrowLeftRight } from 'lucide-react';
+import React, { useState } from "react";
+import { FORMATION_LAYOUTS } from "../data/teams";
+import { ArrowLeftRight, ChevronDown } from "lucide-react";
 
 export default function TacticalPitchBoard({
   team,
   type = "home",
   onUpdateFormation,
-  onSwapSquadPlayers
+  onSwapSquadPlayers,
 }) {
   const isHome = type === "home";
   const formationKey = team.formation || "4-4-2";
@@ -29,161 +29,298 @@ export default function TacticalPitchBoard({
   };
 
   return (
-    <div className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-      
-      {/* Üst Bar: Takım İsmi & Diziliş Seçimi */}
-      <div className="flex items-center justify-between gap-4 pb-4 mb-5 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black shadow-lg border-2 border-slate-700/50"
-            style={{ backgroundColor: team.primaryColor, color: team.secondaryColor }}
-          >
-            {team.logoText || "⚽"}
-          </div>
-          <div>
-            <span className={`text-[11px] font-mono font-bold uppercase tracking-wider ${isHome ? 'text-red-400' : 'text-blue-400'}`}>
-              {isHome ? 'EV SAHİBİ TAKIM TAKTİĞİ' : 'DEPLASMAN TAKIMI TAKTİĞİ'}
-            </span>
-            <h3 className="text-xl font-black text-white">{team.name || (isHome ? 'Ev Sahibi' : 'Deplasman')}</h3>
-          </div>
-        </div>
+    <div className="w-full space-y-5">
+      {/* MATCH TACTICS CONTROL HEADER (Stitch Design Header) */}
+      <section className="bg-[#0c1322]/90 border border-[#1f2d47] rounded-2xl p-5 backdrop-blur-md shadow-2xl relative overflow-hidden">
+        {/* Glow gradient accent */}
+        <div
+          className={`absolute -top-10 -left-10 w-44 h-44 rounded-full blur-3xl pointer-events-none ${
+            isHome ? "bg-rose-600/10" : "bg-electric-400/10"
+          }`}
+        ></div>
 
-        {/* Diziliş Seçimi */}
-        <div className="text-right">
-          <span className="text-[10px] font-mono text-slate-400 block mb-1">DİZİLİŞ / TAKTİK</span>
-          <select
-            value={formationKey}
-            onChange={(e) => onUpdateFormation(e.target.value)}
-            className="bg-slate-900 text-emerald-400 font-mono font-bold text-sm rounded-lg px-3.5 py-1.5 border border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer"
-          >
-            {Object.keys(FORMATION_LAYOUTS).map(fmt => (
-              <option key={fmt} value={fmt}>{fmt}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Yer Değiştirme İpucu Banner'ı */}
-      <div className="mb-4 bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
-        <div className="flex items-center gap-2 text-slate-300">
-          <ArrowLeftRight className="text-amber-400" size={16} />
-          {selectedPlayerIndex !== null ? (
-            <span className="text-amber-400 font-bold animate-pulse">
-              1. Oyuncu Seçildi ({team.squad[selectedPlayerIndex]?.name}). Şimdi yerini değiştirmek istediğiniz 2. oyuncuya tıklayın!
-            </span>
-          ) : (
-            <span>İki oyuncunun yerini değiştirmek için sırayla üstlerine tıklayın.</span>
-          )}
-        </div>
-        {selectedPlayerIndex !== null && (
-          <button
-            onClick={() => setSelectedPlayerIndex(null)}
-            className="text-[10px] bg-slate-800 text-slate-400 hover:text-white px-2.5 py-1 rounded"
-          >
-            Seçimi İptal Et
-          </button>
-        )}
-      </div>
-
-      {/* Dikey Yeşil Saha Üzerinde Görsel Oyuncu Kartları (Arama İkonları Kaldırıldı) */}
-      <div className="relative w-full aspect-[4/5] max-w-[650px] mx-auto bg-gradient-to-b from-emerald-950 via-emerald-900 to-emerald-950 rounded-2xl border-2 border-emerald-700/50 p-4 shadow-2xl overflow-hidden flex items-center justify-center">
-        
-        {/* Çim Sahası Çizgileri */}
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <div className="w-full h-full flex flex-col">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className={`flex-1 ${i % 2 === 0 ? 'bg-black/20' : 'bg-transparent'}`}></div>
-            ))}
-          </div>
-
-          <div className="absolute inset-3 border-2 border-white rounded-lg"></div>
-          <div className="absolute top-1/2 left-3 right-3 h-0.5 bg-white -translate-y-1/2"></div>
-          <div className="absolute top-1/2 left-1/2 w-28 h-28 border-2 border-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-
-          <div className="absolute top-3 left-1/2 w-48 h-24 border-2 border-white border-t-0 -translate-x-1/2"></div>
-          <div className="absolute bottom-3 left-1/2 w-48 h-24 border-2 border-white border-b-0 -translate-x-1/2"></div>
-        </div>
-
-        {/* 11 Oyuncu Kartının Saha Üzerindeki Yerleşimi */}
-        <div className="relative w-full h-full">
-          {layout.positions.map((pos, idx) => {
-            const player = team.squad[idx] || { name: `Oyuncu ${idx+1}`, pos: pos.role };
-            const isSelected = selectedPlayerIndex === idx;
-
-            const posY = 92 - (pos.x * 0.82);
-            const posX = pos.y;
-
-            return (
-              <div
-                key={player.id || idx}
-                onClick={() => handleCardClick(idx)}
-                style={{
-                  top: `${posY}%`,
-                  left: `${posX}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-                className="absolute transition-all duration-500 hover:scale-110 cursor-pointer group z-10"
+        <div className="flex flex-wrap items-center justify-between gap-5 relative z-10">
+          {/* Team Identity Block */}
+          <div className="flex items-center gap-3.5">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-xl font-black shadow-lg border-2 border-slate-700/50"
+              style={{
+                backgroundColor: team.primaryColor || "#090e1a",
+                color: team.secondaryColor || "#ffffff",
+              }}
+            >
+              {team.logoText || "⚽"}
+            </div>
+            <div>
+              <span
+                className={`block text-[11px] font-['Barlow_Condensed'] uppercase tracking-[0.2em] font-semibold mb-0.5 ${
+                  isHome ? "text-[#f59e0b]" : "text-[#38bdf8]"
+                }`}
               >
-                {/* Oyuncu Kartı (Arama 🔍 İkonları Kaldırıldı) */}
-                <div className={`relative bg-slate-950/95 p-2 rounded-xl shadow-2xl min-w-[105px] max-w-[135px] text-center backdrop-blur-md transition-all ${
-                  isSelected 
-                    ? 'border-2 border-amber-400 ring-4 ring-amber-400/40 scale-110 bg-slate-900 shadow-amber-950/80' 
-                    : 'border-2 border-slate-700/80 group-hover:border-emerald-400'
-                }`}>
-                  
-                  {/* Forma Numarası Badge (Sol Üst) */}
-                  <span className={`absolute -top-2.5 -left-2.5 font-mono font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow ${
-                    isSelected ? 'bg-amber-400 text-slate-950' : 'bg-slate-900 border border-slate-700 text-slate-300'
-                  }`}>
-                    {idx + 1}
-                  </span>
+                {isHome ? "1. TAKIM TAKTİĞİ" : "2. TAKIM TAKTİĞİ"}
+              </span>
+              <h1 className="text-2xl md:text-3xl font-['Barlow_Condensed'] font-extrabold tracking-tight text-white uppercase drop-shadow-sm">
+                {team.name || (isHome ? "1. Takım" : "2. Takım")}
+              </h1>
+            </div>
+          </div>
 
-                  {/* Oyuncu İsmi */}
-                  <div className={`font-extrabold text-white text-xs truncate mt-0.5 ${isSelected ? 'text-amber-300' : 'group-hover:text-emerald-300'}`}>
-                    {player.name}
-                  </div>
-
-                  {/* Mevki ve Rol */}
-                  <div className="flex items-center justify-center gap-1 mt-0.5 text-[9px] font-mono text-slate-400">
-                    <span className="bg-slate-800 px-1 py-0.2 rounded font-bold text-emerald-400">{pos.role}</span>
-                    <span className="truncate text-slate-400 font-medium">
-                      {getRoleDescription(pos.role)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Yön Oku / Seçim İndikatörü */}
-                <div className="w-full flex justify-center mt-0.5">
-                  {isSelected ? (
-                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"></div>
-                  ) : (
-                    <div className="w-1.5 h-1.5 bg-emerald-400/60 rounded-full opacity-60 group-hover:opacity-100"></div>
-                  )}
+          {/* Formation Selector Dropdown Block */}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <label
+                htmlFor="formation-selector"
+                className="block text-[10px] font-['Barlow_Condensed'] tracking-[0.22em] font-bold text-slate-400 uppercase mb-1"
+              >
+                DİZİLİŞ / TAKTİK
+              </label>
+              <div className="relative">
+                <select
+                  id="formation-selector"
+                  value={formationKey}
+                  onChange={(e) => onUpdateFormation(e.target.value)}
+                  className="appearance-none bg-[#090e1a] border border-[#10b981]/50 hover:border-[#10b981] text-[#00f59b] font-['Barlow_Condensed'] font-bold text-lg rounded-xl pl-4 pr-10 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#10b981]/40 shadow-inner cursor-pointer transition-colors"
+                >
+                  {Object.keys(FORMATION_LAYOUTS).map((fmt) => (
+                    <option key={fmt} value={fmt}>
+                      {fmt} {getFormationLabel(fmt)}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#10b981]">
+                  <ChevronDown size={18} />
                 </div>
               </div>
-            );
-          })}
+            </div>
+          </div>
         </div>
 
-      </div>
+        {/* Quick Swap Helper Prompt Notification */}
+        <div className="mt-4 pt-3.5 border-t border-[#1f2d47] flex items-center justify-between text-xs text-slate-300 font-medium bg-[#090e1a]/80 rounded-xl px-4 py-2.5 border-l-4 border-l-[#f59e0b]">
+          <div className="flex items-center gap-2.5">
+            <ArrowLeftRight size={16} className="text-[#f59e0b] shrink-0" />
+            {selectedPlayerIndex !== null ? (
+              <span className="text-[#fbbf24] font-bold animate-pulse font-mono">
+                1. Oyuncu Seçildi ({team.squad[selectedPlayerIndex]?.name}).
+                Şimdi yerini değiştirmek istediğiniz 2. oyuncuya tıklayın!
+              </span>
+            ) : (
+              <span>
+                İki oyuncunun yerini değiştirmek için sırayla üstlerine
+                tıklayın.
+              </span>
+            )}
+          </div>
+          {selectedPlayerIndex !== null && (
+            <button
+              onClick={() => setSelectedPlayerIndex(null)}
+              type="button"
+              className="text-[10px] bg-[#1a2338] text-slate-300 hover:text-white px-2.5 py-1 rounded-md font-mono cursor-pointer border border-[#1f2d47]"
+            >
+              İptal Et
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* FOOTBALL PITCH VISUALIZER (Stitch Design Pitch Board) */}
+      <section className="relative rounded-3xl p-3 md:p-6 bg-[#0c1322]/70 border border-[#1f2d47] shadow-2xl backdrop-blur-md">
+        {/* Pitch Graphic Turf Container */}
+        <div className="relative w-full aspect-[4/3] sm:aspect-[16/11] md:aspect-[16/10] max-h-[720px] rounded-2xl pitch-stripes border-2 border-[#10b981]/30 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7),0_0_40px_-5px_rgba(16,185,129,0.08)] overflow-hidden select-none">
+          {/* Pitch Field Markings (SVG Overlay) */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none stroke-[#10b981]/30"
+            fill="none"
+            preserveAspectRatio="none"
+            strokeWidth="2"
+            viewBox="0 0 800 600"
+          >
+            {/* Outer Boundary */}
+            <rect height="550" rx="6" width="740" x="30" y="25"></rect>
+            {/* Halfway line */}
+            <line strokeWidth="1.8" x1="30" x2="770" y1="300" y2="300"></line>
+            {/* Center Circle & Center Spot */}
+            <circle cx="400" cy="300" r="70" strokeWidth="1.8"></circle>
+            <circle
+              cx="400"
+              cy="300"
+              fill="rgba(52, 211, 153, 0.4)"
+              r="3.5"
+              stroke="none"
+            ></circle>
+
+            {/* TOP GOAL / ATTACKING AREA */}
+            <rect height="110" width="280" x="260" y="25"></rect>
+            <rect height="40" width="140" x="330" y="25"></rect>
+            <path
+              d="M 340 135 A 65 65 0 0 0 460 135"
+              strokeDasharray="2 1"
+            ></path>
+            <circle
+              cx="400"
+              cy="90"
+              fill="rgba(52, 211, 153, 0.3)"
+              r="3"
+              stroke="none"
+            ></circle>
+
+            {/* BOTTOM GOAL AREA */}
+            <rect height="110" width="280" x="260" y="465"></rect>
+            <rect height="40" width="140" x="330" y="535"></rect>
+            <path
+              d="M 340 465 A 65 65 0 0 1 460 465"
+              strokeDasharray="2 1"
+            ></path>
+            <circle
+              cx="400"
+              cy="510"
+              fill="rgba(52, 211, 153, 0.3)"
+              r="3"
+              stroke="none"
+            ></circle>
+
+            {/* Corner Arcs */}
+            <path d="M 30 45 A 20 20 0 0 0 50 25"></path>
+            <path d="M 750 25 A 20 20 0 0 0 770 45"></path>
+            <path d="M 30 555 A 20 20 0 0 1 50 575"></path>
+            <path d="M 750 575 A 20 20 0 0 1 770 555"></path>
+          </svg>
+
+          {/* Dynamic Pitch Lighting Vignette */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35 pointer-events-none"></div>
+
+          {/* 11 PLAYER TOKENS / CARDS ON TURF */}
+          <div className="relative w-full h-full">
+            {layout.positions.map((pos, idx) => {
+              const player = team.squad[idx] || {
+                name: `Oyuncu ${idx + 1}`,
+                pos: pos.role,
+              };
+              const isSelected = selectedPlayerIndex === idx;
+
+              // Dikey saha oranlaması
+              const posY = 90 - pos.x * 0.8;
+              const posX = pos.y;
+
+              return (
+                <div
+                  key={player.id || idx}
+                  onClick={() => handleCardClick(idx)}
+                  style={{
+                    top: `${posY}%`,
+                    left: `${posX}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  className="absolute flex flex-col items-center cursor-pointer group z-20"
+                >
+                  {/* Player Token Card */}
+                  <div
+                    className={`player-card relative rounded-xl px-3 py-1.5 shadow-xl flex items-center gap-2 transition-all ${
+                      isSelected
+                        ? "bg-[#090e1a] border-2 border-[#00f59b] shadow-[0_0_25px_rgba(0,245,155,0.7)] -translate-y-1 scale-105"
+                        : "bg-[#050811]/90 hover:bg-[#090e1a] border border-slate-700/80 hover:border-[#00f59b]/60"
+                    }`}
+                  >
+                    {/* Jersey / Slot Number */}
+                    <span
+                      className={`w-5 h-5 rounded-md font-['Barlow_Condensed'] font-bold text-[11px] flex items-center justify-center border ${
+                        isSelected
+                          ? "bg-[#00f59b] text-[#050811] border-[#00f59b]"
+                          : "bg-[#f59e0b]/20 text-[#fbbf24] border-[#f59e0b]/40"
+                      }`}
+                    >
+                      {idx + 1}
+                    </span>
+
+                    <div>
+                      <p className="text-xs font-bold text-white leading-tight whitespace-nowrap font-sans">
+                        {player.name}
+                      </p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span
+                          className={`text-[9px] font-bold uppercase px-1 rounded ${
+                            pos.role === "GK"
+                              ? "bg-[#f59e0b]/20 text-[#fbbf24]"
+                              : ["CB", "LB", "RB"].includes(pos.role)
+                                ? "bg-[#38bdf8]/20 text-[#38bdf8]"
+                                : ["ST", "LW", "RW"].includes(pos.role)
+                                  ? "bg-rose-500/20 text-rose-300"
+                                  : "bg-[#10b981]/20 text-[#10b981]"
+                          }`}
+                        >
+                          {pos.role}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-medium">
+                          {getRoleDescription(pos.role)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Position anchor dot on turf */}
+                  <div
+                    className={`w-2.5 h-2.5 mt-1.5 rounded-full ${
+                      isSelected
+                        ? "bg-[#00f59b] shadow-[0_0_12px_#00f59b]"
+                        : "bg-[#00f59b] shadow-[0_0_8px_#00f59b] opacity-80 group-hover:opacity-100"
+                    }`}
+                  ></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
 
 function getRoleDescription(pos) {
   switch (pos) {
-    case 'GK': return 'Kaleci';
-    case 'CB': return 'Stoper';
-    case 'LB': return 'Sol Bek';
-    case 'RB': return 'Sağ Bek';
-    case 'CDM': return 'Ön Libero';
-    case 'CM': return 'Orta Saha';
-    case 'CAM': return 'Ofansif Orta';
-    case 'LM': return 'Sol Kanat';
-    case 'RM': return 'Sağ Kanat';
-    case 'LW': return 'Sol Forvet';
-    case 'RW': return 'Sağ Forvet';
-    case 'ST': return 'Santrafor';
-    default: return 'Oyuncu';
+    case "GK":
+      return "Kaleci";
+    case "CB":
+      return "Stoper";
+    case "LB":
+      return "Sol Bek";
+    case "RB":
+      return "Sağ Bek";
+    case "CDM":
+      return "Ön Libero";
+    case "CM":
+      return "Orta Saha";
+    case "CAM":
+      return "Ofansif Orta";
+    case "LM":
+      return "Sol Kanat";
+    case "RM":
+      return "Sağ Kanat";
+    case "LW":
+      return "Sol Forvet";
+    case "RW":
+      return "Sağ Forvet";
+    case "ST":
+      return "Santrafor";
+    default:
+      return "Oyuncu";
+  }
+}
+
+function getFormationLabel(fmt) {
+  switch (fmt) {
+    case "4-4-2":
+      return "(Klasik Çift Forvet)";
+    case "4-2-3-1":
+      return "(Ofansif Pivot)";
+    case "4-3-3":
+      return "(Hücum Kanatları)";
+    case "3-5-2":
+      return "(Dinamik Kanat Bekler)";
+    case "4-1-2-1-2":
+      return "(Dar Baklava Orta Saha)";
+    case "5-3-2":
+      return "(Savunma Katmanı)";
+    default:
+      return "";
   }
 }

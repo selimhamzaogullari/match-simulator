@@ -1,31 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, FastForward, MessageSquare, BarChart2, Shield, Award, Users, Trophy, Lock } from 'lucide-react';
-import MatchStats from './MatchStats';
-import MatchReport from './MatchReport';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  FastForward,
+  MessageSquare,
+  BarChart2,
+  Shield,
+  Award,
+  Users,
+  Trophy,
+  Lock,
+  Zap,
+  Flame,
+  FileText,
+  Activity,
+} from "lucide-react";
+import MatchStats from "./MatchStats";
+import MatchReport from "./MatchReport";
+import PlayerRatings from "./PlayerRatings";
 
 export default function Cm0102MatchView({
   homeTeam,
   awayTeam,
   matchResult,
-  onResetMatch
+  onResetMatch,
 }) {
   const [matchTimeSec, setMatchTimeSec] = useState(0); // 0 -> (90+extra) * 60 saniye
-  const [isPlaying, setIsPlaying] = useState(false); // BAŞLANGIÇTA DURAKLATILMIŞ (MANUEL KICK-OFF)
+  const [isPlaying, setIsPlaying] = useState(false); // MANUEL KICK-OFF İÇİN BAŞLANGIÇTA DURAKLATILMIŞ
   const [hasStarted, setHasStarted] = useState(false);
   const [simSpeed, setSimSpeed] = useState(1); // 1x, 2x, 5x
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'stats' | 'ratings' | 'report'
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'stats' | 'ratings' | 'report'
 
   // Rastgele Uzatma Süreleri (Maç Başına Üretilir)
   const [stoppageTime] = useState(() => ({
     firstHalf: Math.floor(Math.random() * 4) + 1, // +1 ile +4 dakika arası
-    secondHalf: Math.floor(Math.random() * 5) + 2  // +2 ile +6 dakika arası
+    secondHalf: Math.floor(Math.random() * 5) + 2, // +2 ile +6 dakika arası
   }));
 
   // Canlı Takip State'leri
-  const [activeSentence, setActiveSentence] = useState("Karşılaşma başlamak üzere...");
+  const [activeSentence, setActiveSentence] = useState(
+    "Karşılaşma başlamak üzere. Başlat butonuna basarak düdüğü çalabilirsiniz.",
+  );
   const [visibleEvents, setVisibleEvents] = useState([]);
-  const [liveHomeScore, setLiveHomeScore] = useState(0);
-  const [liveAwayScore, setLiveAwayScore] = useState(0);
 
   // Devre Arası, Gol Kutlaması ve Pozisyon Adımı State'leri
   const [isHalfTime, setIsHalfTime] = useState(false);
@@ -43,7 +60,8 @@ export default function Cm0102MatchView({
 
   const maxMatchMin = 90 + stoppageTime.secondHalf;
   const maxFirstHalfMin = 45 + stoppageTime.firstHalf;
-  const isMatchEnded = currentMinute >= maxMatchMin || matchTimeSec >= maxMatchMin * 60;
+  const isMatchEnded =
+    currentMinute >= maxMatchMin || matchTimeSec >= maxMatchMin * 60;
 
   // Dakika Biçimlendirici (45+2', 90+4')
   const getDisplayMinute = (min) => {
@@ -56,9 +74,15 @@ export default function Cm0102MatchView({
     return `${min}'`;
   };
 
-  // 1. ZAMANLAYICI VE CANLI CÜMLE AKIŞ MOTORU (CM 01/02 TIMELINE ENGINE - KESİN ZAMAN KİLİTLİ)
+  // 1. ZAMANLAYICI VE CANLI CÜMLE AKIŞ MOTORU (CM 01/02 TIMELINE ENGINE)
   useEffect(() => {
-    if (!isPlaying || isHalfTime || isGoalCelebratingRef.current || isSteppingState || !hasStarted) {
+    if (
+      !isPlaying ||
+      isHalfTime ||
+      isGoalCelebratingRef.current ||
+      isSteppingState ||
+      !hasStarted
+    ) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
@@ -66,15 +90,19 @@ export default function Cm0102MatchView({
     const intervalMs = 1000 / simSpeed;
 
     timerRef.current = setInterval(() => {
-      setMatchTimeSec(prevSec => {
+      setMatchTimeSec((prevSec) => {
         const totalMaxSec = maxMatchMin * 60;
 
         if (prevSec >= totalMaxSec) {
           setIsPlaying(false);
           const motm = matchResult?.manOfTheMatch;
-          const motmText = motm ? ` 🌟 Maçın Adamı: ${motm.name} (${motm.rating} Puan).` : '';
-          setActiveSentence(`🏆 MAÇ BİTTİ! Hakem son düdüğü çaldı.${motmText} Karşılaşma sona erdi!`);
-          setActiveTab('report');
+          const motmText = motm
+            ? ` 🌟 Maçın Adamı: ${motm.name} (${motm.rating} Puan).`
+            : "";
+          setActiveSentence(
+            `🏆 MAÇ BİTTİ! Hakem son düdüğü çaldı.${motmText} Karşılaşma sona erdi!`,
+          );
+          setActiveTab("report");
           return totalMaxSec;
         }
 
@@ -83,32 +111,47 @@ export default function Cm0102MatchView({
 
         // 45. Dakikada 4. Hakem Duyurusu
         if (min === 45 && prevSec === 44 * 60) {
-          setActiveSentence(`📢 Dördüncü hakem tabelayı kaldırdı: İlk yarının sonuna en az +${stoppageTime.firstHalf} dakika ek süre ilave edildi!`);
+          setActiveSentence(
+            `📢 Dördüncü hakem tabelayı kaldırdı: İlk yarının sonuna en az +${stoppageTime.firstHalf} dakika ek süre ilave edildi!`,
+          );
         }
 
         // 90. Dakikada 4. Hakem Duyurusu
         if (min === 90 && prevSec === 89 * 60) {
-          setActiveSentence(`📢 Dördüncü hakem tabelayı kaldırdı: Maçın sonuna en az +${stoppageTime.secondHalf} dakika ek süre ilave edildi!`);
+          setActiveSentence(
+            `📢 Dördüncü hakem tabelayı kaldırdı: Maçın sonuna en az +${stoppageTime.secondHalf} dakika ek süre ilave edildi!`,
+          );
         }
 
         // İlk Yarı Sonu Duraklatması (45 + Uzatma)
         if (min >= maxFirstHalfMin && prevSec < maxFirstHalfMin * 60) {
           setIsPlaying(false);
           setIsHalfTime(true);
-          setActiveSentence("İlk yarı sona erdi. Takımlar soyunma odasına gidiyor.");
+          setActiveSentence(
+            "İlk yarı sona erdi. Takımlar soyunma odasına gidiyor.",
+          );
           return maxFirstHalfMin * 60;
         }
 
-        // O anki dakikadaki henüz İŞLENMEMİŞ tüm olayları bul
-        const unprocessedForMin = events.filter(e => e.min === min && !processedEventIdsRef.current.has(e.id || `${e.min}_${e.type}_${e.scorer}`));
-
-        if (unprocessedForMin.length > 0) {
-          // Dakikadaki tüm olayları sırayla çalıştır
-          triggerSequentialEventsQueue(unprocessedForMin);
-        } else if (!isSteppingRef.current && min !== 45 && min !== 90) {
-          // Akıllı Boş Dakika Cümle Mantığı (10 Dk Kuralı)
-          const idleText = getSmartIdleSentence(min, events);
-          setActiveSentence(idleText);
+        // Dakikaya Denk Gelen Olayları İşle
+        const minuteEvents = events.filter(
+          (e) =>
+            e.min === min &&
+            !processedEventIdsRef.current.has(e.id || `${e.min}_${e.type}`),
+        );
+        if (minuteEvents.length > 0 && !isSteppingRef.current) {
+          triggerSequentialEventsQueue(minuteEvents, min);
+        } else if (
+          minuteEvents.length === 0 &&
+          !isSteppingRef.current &&
+          !isGoalCelebratingRef.current
+        ) {
+          // Sıradan Maç İçi Anlatım Cümlesi
+          if (min > 0 && min % 6 === 0) {
+            setActiveSentence(
+              getAmbientSentence(min, homeTeam.name, awayTeam.name),
+            );
+          }
         }
 
         return nextSec;
@@ -118,621 +161,632 @@ export default function Cm0102MatchView({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlaying, isHalfTime, isSteppingState, hasStarted, simSpeed, events, maxFirstHalfMin, maxMatchMin, stoppageTime, matchResult]);
+  }, [
+    isPlaying,
+    isHalfTime,
+    isSteppingState,
+    hasStarted,
+    simSpeed,
+    events,
+    maxMatchMin,
+    maxFirstHalfMin,
+    matchResult,
+    stoppageTime,
+  ]);
 
-  // AKILLI BOŞ DAKİKA CÜMLE MANTIĞI (10 Dk Aralık Kuralı)
-  const getSmartIdleSentence = (min, eventList) => {
-    if (min === maxFirstHalfMin + 1) return "İkinci yarı başladı!";
-
-    const nextEvent = eventList.find(e => e.min > min);
-    const prevEvents = eventList.filter(e => e.min < min);
-    const lastEvent = prevEvents.length > 0 ? prevEvents[prevEvents.length - 1] : null;
-
-    const timeToNext = nextEvent ? (nextEvent.min - min) : 99;
-    const timeSinceLast = lastEvent ? (min - lastEvent.min) : min;
-
-    if (timeToNext < 10) {
-      return "Maç devam ediyor...";
-    }
-
-    if (timeSinceLast <= 4) {
-      return "Maç devam ediyor...";
-    }
-
-    if (timeSinceLast >= 5 && timeSinceLast <= 8) {
-      return "Tribünlerden coşkulu tezahüratlar yükseliyor...";
-    }
-
-    if (timeSinceLast >= 9 && timeSinceLast <= 12) {
-      return "Orta alanda kıran kırana taktiksel mücadele sürerken tempo dengeleniyor.";
-    }
-
-    return "Maç devam ediyor...";
-  };
-
-  // SİNEMATİK GOL AKIŞI & OKUMA SÜRESİ 2.4S
-  const triggerSequentialEventsQueue = (eventItems) => {
-    if (isSteppingRef.current || eventItems.length === 0) return;
+  // 2. SIRALI ÇOKLU OLAY İŞLEME MOTORU (Sequential Event Queue)
+  const triggerSequentialEventsQueue = async (minuteEvents, currentMin) => {
     isSteppingRef.current = true;
-    setIsSteppingState(true); // Dakika sayacını dondur!
+    setIsSteppingState(true);
 
-    let eventIdx = 0;
+    for (const eventItem of minuteEvents) {
+      const eventId = eventItem.id || `${eventItem.min}_${eventItem.type}`;
+      processedEventIdsRef.current.add(eventId);
 
-    const processNextEvent = () => {
-      if (eventIdx >= eventItems.length) {
-        isSteppingRef.current = false;
-        setIsSteppingState(false); // Tüm olaylar bitti, sayacı çöz!
-        return;
+      const steps = eventItem.steps || [eventItem.description];
+      const isGoalEvent = eventItem.type.includes("GOAL");
+
+      const buildUpSteps =
+        isGoalEvent && steps.length > 1
+          ? steps.slice(0, steps.length - 1)
+          : steps;
+      const finalGoalStep =
+        isGoalEvent && steps.length > 1 ? steps[steps.length - 1] : null;
+
+      // Gelişme Cümlelerini Sırayla Oynat
+      for (let i = 0; i < buildUpSteps.length; i++) {
+        setActiveSentence(buildUpSteps[i]);
+        const stepDelay = Math.max(1800, 2400 / simSpeed);
+        await new Promise((resolve) => setTimeout(resolve, stepDelay));
       }
 
-      const eventItem = eventItems[eventIdx];
-      const eventKey = eventItem.id || `${eventItem.min}_${eventIdx}_${eventItem.type}`;
-      processedEventIdsRef.current.add(eventKey);
+      // Gol Olayı İse Kutlama Efekti & Final Cümlesi
+      if (isGoalEvent) {
+        isGoalCelebratingRef.current = true;
+        setGoalOverlay({
+          isHome: eventItem.isHome,
+          scorer: eventItem.scorer || eventItem.player || "Oyuncu",
+          assist: eventItem.assist || null,
+          min: currentMin,
+        });
 
-      const steps = eventItem.steps || [eventItem.text || "Pozisyon gelişiyor..."];
-      const isGoalEvent = eventItem.type.includes('GOAL');
-      let stepIdx = 0;
+        // 4.5 saniye gol kutlamasında zaman ve sayaç tamamen donar
+        await new Promise((resolve) => setTimeout(resolve, 4500));
+        setGoalOverlay(null);
+        isGoalCelebratingRef.current = false;
 
-      // Gol olaylarında son cümle (filelere gitti cümlesi) öncesine kadar pre-goal adımları oynatılır
-      const maxPreGoalStepIdx = isGoalEvent && steps.length >= 2 ? steps.length - 2 : steps.length - 1;
-
-      const stepInterval = setInterval(() => {
-        if (stepIdx <= maxPreGoalStepIdx) {
-          const sentence = steps[stepIdx];
-          
-          setActiveSentence(sentence);
-
-          // GOL PATLAMASI KONTROLÜ (Şut/Kafa vuruşu cümlesinden sonra patlar)
-          if (isGoalEvent && stepIdx === maxPreGoalStepIdx && !isGoalCelebratingRef.current) {
-            clearInterval(stepInterval);
-            isGoalCelebratingRef.current = true;
-
-            // 1. SKORU GÜNCELLE VE KOCAMAN GOL KARTINI AÇ
-            if (eventItem.isHome) {
-              setLiveHomeScore(prev => Math.max(prev, countGoalsUntil(eventItem.min, true, eventKey)));
-            } else {
-              setLiveAwayScore(prev => Math.max(prev, countGoalsUntil(eventItem.min, false, eventKey)));
-            }
-
-            setGoalOverlay({
-              isHome: eventItem.isHome,
-              teamName: eventItem.isHome ? (homeTeam.name || 'Ev Sahibi') : (awayTeam.name || 'Deplasman'),
-              scorer: eventItem.scorer || 'Gol',
-              min: eventItem.min
-            });
-
-            // 2. 4.5 SANİYE SEVİNÇTEN SONRA SON GOL CÜMLESİNİ (AĞLARA GİTTİ) SARI BANDA BAS
-            setTimeout(() => {
-              setGoalOverlay(null);
-              isGoalCelebratingRef.current = false;
-
-              const finalNetSentence = steps[steps.length - 1]; // Son gol cümlesi
-              setActiveSentence(finalNetSentence);
-
-              // 3. Son gol cümlesi ekranda 3.5 saniye dursun, sonra maça devam et
-              setTimeout(() => {
-                setVisibleEvents(prev => {
-                  if (prev.some(e => (e.id && e.id === eventKey) || (e.min === eventItem.min && e.type === eventItem.type && e.scorer === eventItem.scorer))) return prev;
-                  return [...prev, eventItem];
-                });
-
-                eventIdx++;
-                processNextEvent();
-              }, 3500 / simSpeed);
-
-            }, 4500);
-
-            return;
-          }
-
-          stepIdx++;
-        } else {
-          clearInterval(stepInterval);
-
-          setVisibleEvents(prev => {
-            if (prev.some(e => (e.id && e.id === eventKey) || (e.min === eventItem.min && e.type === eventItem.type && e.scorer === eventItem.scorer))) return prev;
-            return [...prev, eventItem];
-          });
-
-          eventIdx++;
-          processNextEvent();
-        }
-      }, 2400 / simSpeed); // 2.4 saniye okuma süresi
-    };
-
-    processNextEvent();
-  };
-
-  const countGoalsUntil = (targetMin, isHome, currentEventKey) => {
-    let count = 0;
-    events.forEach(e => {
-      const eKey = e.id || `${e.min}_${e.type}`;
-      if (e.type.includes('GOAL') && e.isHome === isHome) {
-        if (e.min < targetMin || (e.min === targetMin && (processedEventIdsRef.current.has(eKey) || eKey === currentEventKey))) {
-          count++;
+        if (finalGoalStep) {
+          setActiveSentence(finalGoalStep);
+          const finalDelay = Math.max(2500, 3200 / simSpeed);
+          await new Promise((resolve) => setTimeout(resolve, finalDelay));
         }
       }
-    });
-    return count;
-  };
 
-  // DİNAMİK 5 DAKİKALIK TOPLA OYNAMA ORANI HESAPLAMA
-  const getDynamic5MinPossession = () => {
-    const overallHomePoss = matchResult?.stats?.homePossession || 50;
-
-    const recentEvents = events.filter(e => e.min >= currentMinute - 5 && e.min <= currentMinute);
-    const homeRecentAttacks = recentEvents.filter(e => e.isHome).length;
-    const awayRecentAttacks = recentEvents.filter(e => !e.isHome).length;
-
-    let homeDynamic = overallHomePoss;
-    if (homeRecentAttacks > awayRecentAttacks) {
-      homeDynamic += Math.min(18, (homeRecentAttacks - awayRecentAttacks) * 6);
-    } else if (awayRecentAttacks > homeRecentAttacks) {
-      homeDynamic -= Math.min(18, (awayRecentAttacks - homeRecentAttacks) * 6);
-    } else {
-      const wave = Math.round(Math.sin(currentMinute * 0.5) * 4);
-      homeDynamic += wave;
+      // Olayı Sol/Alt Geçmiş Listesine Ekle
+      setVisibleEvents((prev) => {
+        if (prev.some((e) => e.id === eventId)) return prev;
+        return [eventItem, ...prev];
+      });
     }
 
-    const finalHomePoss = Math.min(82, Math.max(18, Math.round(homeDynamic)));
-    const finalAwayPoss = 100 - finalHomePoss;
+    isSteppingRef.current = false;
+    setIsSteppingState(false);
+  };
 
-    return { home: finalHomePoss, away: finalAwayPoss };
+  // Başlat / Duraklat Buton Handler'ı
+  const handleTogglePlay = () => {
+    if (!hasStarted) {
+      setHasStarted(true);
+      setActiveSentence(
+        `🗣️ Hakem başlama düdüğünü çaldı! ${homeTeam.name} - ${awayTeam.name} karşılaşması başladı.`,
+      );
+    }
+    setIsPlaying((prev) => !prev);
+  };
+
+  // İkinci Yarıyı Başlat Buton Handler'ı
+  const handleStartSecondHalf = () => {
+    setIsHalfTime(false);
+    setIsPlaying(true);
+    setActiveSentence(`🔔 İkinci yarı başladı! Her iki takıma da başarılar.`);
+  };
+
+  // Canlı Skor Hesaplama
+  const liveHomeScore = visibleEvents.filter(
+    (e) => e.type.includes("GOAL") && e.isHome,
+  ).length;
+  const liveAwayScore = visibleEvents.filter(
+    (e) => e.type.includes("GOAL") && !e.isHome,
+  ).length;
+
+  // Gol Atanlar Listesi
+  const homeGoals = visibleEvents.filter(
+    (e) => e.type.includes("GOAL") && e.isHome,
+  );
+  const awayGoals = visibleEvents.filter(
+    (e) => e.type.includes("GOAL") && !e.isHome,
+  );
+
+  // Dynamic 5-Min Possession Tracker (% calculation)
+  const getDynamic5MinPossession = () => {
+    const recent = visibleEvents.slice(0, 5);
+    const homeCount = recent.filter((e) => e.isHome).length;
+    const awayCount = recent.filter((e) => !e.isHome).length;
+    if (homeCount === 0 && awayCount === 0) return { home: 54, away: 46 };
+    const homePct = Math.round((homeCount / (homeCount + awayCount)) * 100);
+    return {
+      home: Math.max(30, Math.min(70, homePct)),
+      away: 100 - Math.max(30, Math.min(70, homePct)),
+    };
   };
 
   const dynamicPoss = getDynamic5MinPossession();
 
-  // Gol atanlar listesi
-  const homeGoalScorers = visibleEvents.filter(e => e.isHome && e.type.includes('GOAL'));
-  const awayGoalScorers = visibleEvents.filter(e => !e.isHome && e.type.includes('GOAL'));
-
-  // İlk Yarı Maçı Başlat (Kick Off Duyurusuyla) Handler'ı
-  const handleKickOffMatch = () => {
-    setHasStarted(true);
-    setActiveSentence("Hakem ilk düdüğü çaldı! Maç başladı!");
-    setTimeout(() => {
-      setIsPlaying(true);
-    }, 2400 / simSpeed);
-  };
-
-  // İkinci Yarıyı Başlat Handler'ı
-  const handleStartSecondHalf = () => {
-    setMatchTimeSec((maxFirstHalfMin + 1) * 60); // İkinci yarı başlangıç dakikası
-    setIsHalfTime(false);
-    setIsPlaying(true);
-    setActiveSentence("İkinci yarı başladı! İki takıma da başarılar.");
-  };
-
   return (
-    <div className="w-full max-w-5xl mx-auto bg-[#070d1e] text-slate-100 rounded-2xl border-4 border-[#1e295d] shadow-2xl overflow-hidden font-sans select-none my-2 relative">
-      
-      {/* KOCAMAN GOL ANİMASYONU OVERLAY (GOAL CELEBRATION OVERLAY) */}
-      {goalOverlay && (
-        <div className="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center animate-fadeIn p-6">
-          <div className="relative group text-center">
-            <div className="absolute -inset-4 bg-gradient-to-r from-yellow-500 via-amber-300 to-yellow-500 rounded-3xl blur-xl opacity-80 animate-pulse"></div>
-            
-            <div className="relative bg-gradient-to-b from-yellow-400 via-amber-400 to-yellow-500 text-slate-950 px-10 py-8 rounded-2xl border-8 border-yellow-300 shadow-2xl transform scale-105 transition-all">
-              <div className="flex items-center justify-center gap-3 text-4xl sm:text-6xl font-black mb-2 animate-bounce">
-                <span>⚽</span>
-                <span className="tracking-widest">GOOOOOLLLL!</span>
-                <span>⚽</span>
+    <div className="w-full max-w-7xl mx-auto space-y-6 pb-28">
+      {/* 1. SCOREBOARD HERO SECTION (Stitch Design Scoreboard) */}
+      <section className="glass-panel rounded-2xl p-5 lg:p-7 relative overflow-hidden shadow-2xl">
+        {/* Ambient Team Light Glows in Background */}
+        <div className="absolute -left-20 -top-20 w-72 h-72 bg-rose-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -right-20 -top-20 w-72 h-72 bg-amber-400/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute inset-0 tactical-grid opacity-30 pointer-events-none"></div>
+
+        <div className="relative z-10 grid grid-cols-12 items-center gap-4">
+          {/* Home Team (Team 1) */}
+          <div className="col-span-5 flex items-center justify-end space-x-4 lg:space-x-6 text-right">
+            <div>
+              <div className="flex items-center justify-end space-x-2">
+                <span className="text-xs text-amber-accent font-mono uppercase font-bold">
+                  1. TAKIM
+                </span>
+                <span className="text-xs text-slate-400 font-mono hidden sm:inline">
+                  ({homeTeam.formation || "4-4-2"})
+                </span>
               </div>
 
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 uppercase tracking-wide mb-2">
-                {goalOverlay.teamName}
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-['Barlow_Condensed'] font-extrabold tracking-tight text-white mt-0.5 uppercase drop-shadow-sm">
+                {homeTeam.name || "1. Takım"}
               </h2>
 
-              <div className="bg-slate-950/90 text-yellow-300 px-6 py-2 rounded-xl text-lg sm:text-2xl font-black font-mono inline-block border border-yellow-400/50 shadow-inner">
-                {goalOverlay.scorer} {getDisplayMinute(goalOverlay.min)}
+              {/* Goal Scorers List */}
+              <div className="mt-2 flex flex-col items-end space-y-1">
+                {homeGoals.map((g, idx) => {
+                  const scorerName = g.scorer || g.player || "Gol";
+                  return (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center space-x-1.5 text-xs text-[#fbbf24] font-medium font-sans"
+                    >
+                      <span>
+                        {scorerName}
+                        {g.assist ? ` (${g.assist})` : ""}
+                      </span>
+                      <span className="font-mono bg-[#f59e0b]/20 px-1.5 py-0.2 rounded border border-[#f59e0b]/30 text-[10px]">
+                        {getDisplayMinute(g.min)}
+                      </span>
+                      <span className="text-slate-300">⚽</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Scoreboard Center Display */}
+          <div className="col-span-2 flex flex-col items-center justify-center">
+            <div className="flex items-center space-x-2 sm:space-x-3 bg-[#050913]/90 border border-[#1f2d47] rounded-xl px-4 py-2.5 shadow-2xl">
+              <span className="font-['Chakra_Petch'] font-black text-4xl sm:text-5xl lg:text-6xl text-[#fbbf24] tracking-tight leading-none drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
+                {liveHomeScore}
+              </span>
+              <span className="text-slate-600 font-light text-2xl sm:text-3xl">
+                :
+              </span>
+              <span className="font-['Chakra_Petch'] font-black text-4xl sm:text-5xl lg:text-6xl text-[#38bdf8] tracking-tight leading-none drop-shadow-[0_0_12px_rgba(56,189,248,0.5)]">
+                {liveAwayScore}
+              </span>
+            </div>
+
+            {/* Display Minute Badge */}
+            <div className="mt-2 text-center">
+              <span className="inline-block bg-[#0b1329] text-xs font-mono font-bold text-slate-200 px-3 py-1 rounded-full border border-[#1f2d47] shadow-sm">
+                {getDisplayMinute(currentMinute)}
+              </span>
+            </div>
+          </div>
+
+          {/* Away Team (Team 2) */}
+          <div className="col-span-5 flex items-center justify-start space-x-4 lg:space-x-6 text-left">
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-[#38bdf8] font-mono uppercase font-bold">
+                  2. TAKIM
+                </span>
+                <span className="text-xs text-slate-400 font-mono hidden sm:inline">
+                  ({awayTeam.formation || "4-4-2"})
+                </span>
               </div>
 
-              <p className="text-xs font-mono font-bold text-slate-900 mt-4 tracking-wider uppercase">
-                Skor Güncellendi: {liveHomeScore} - {liveAwayScore}
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-['Barlow_Condensed'] font-extrabold tracking-tight text-white mt-0.5 uppercase drop-shadow-sm">
+                {awayTeam.name || "2. Takım"}
+              </h2>
+
+              {/* Goal Scorers List */}
+              <div className="mt-2 flex flex-col items-start space-y-1">
+                {awayGoals.length === 0 ? (
+                  <span className="text-xs text-slate-500 italic font-mono">
+                    Henüz gol bulunmuyor
+                  </span>
+                ) : (
+                  awayGoals.map((g, idx) => {
+                    const scorerName = g.scorer || g.player || "Gol";
+                    return (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center space-x-1.5 text-xs text-[#38bdf8] font-medium font-sans"
+                      >
+                        <span className="text-[#38bdf8]">⚽</span>
+                        <span className="font-mono bg-[#0284c7]/20 px-1.5 py-0.2 rounded border border-[#0284c7]/30 text-[10px]">
+                          {getDisplayMinute(g.min)}
+                        </span>
+                        <span>
+                          {scorerName}
+                          {g.assist ? ` (${g.assist})` : ""}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. NAVIGATION TABS (Anti-Spoiler Lock Protected) */}
+      <nav className="flex items-center justify-between border-b border-[#1f2d47] pb-1 overflow-x-auto custom-scrollbar">
+        <div className="flex space-x-1 sm:space-x-2 min-w-max font-['Barlow_Condensed']">
+          {/* CANLI ANLATIM TAB */}
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-4 py-2 rounded-lg font-bold text-xs sm:text-sm tracking-wide flex items-center space-x-2 transition cursor-pointer ${
+              activeTab === "overview"
+                ? "bg-gradient-to-r from-[#f59e0b] to-[#d97706] text-[#080e1c] shadow-glow-amber font-extrabold"
+                : "text-slate-300 hover:text-white hover:bg-[#11192b] border border-[#1f2d47]/50"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-current animate-ping"></span>
+            <span>CANLI ANLATIM</span>
+          </button>
+
+          {/* MAÇ İSTATİSTİKLERİ TAB (Spoiler Lock) */}
+          <button
+            onClick={() => {
+              if (isMatchEnded) setActiveTab("stats");
+            }}
+            disabled={!isMatchEnded}
+            className={`px-4 py-2 rounded-lg font-bold text-xs sm:text-sm tracking-wide flex items-center space-x-1.5 transition ${
+              activeTab === "stats"
+                ? "bg-gradient-to-r from-[#10b981] to-[#059669] text-[#050811] shadow-glow-emerald"
+                : isMatchEnded
+                  ? "text-slate-300 hover:text-white hover:bg-[#11192b] border border-[#1f2d47]/50 cursor-pointer"
+                  : "text-slate-600 border border-[#1f2d47]/40 bg-[#080e1c]/40 cursor-not-allowed"
+            }`}
+          >
+            {!isMatchEnded && <Lock size={13} className="text-amber-500" />}
+            <span>MAÇ İSTATİSTİKLERİ</span>
+          </button>
+
+          {/* OYUNCU REYTİNGLERİ TAB (Spoiler Lock) */}
+          <button
+            onClick={() => {
+              if (isMatchEnded) setActiveTab("ratings");
+            }}
+            disabled={!isMatchEnded}
+            className={`px-4 py-2 rounded-lg font-bold text-xs sm:text-sm tracking-wide flex items-center space-x-1.5 transition ${
+              activeTab === "ratings"
+                ? "bg-gradient-to-r from-[#10b981] to-[#059669] text-[#050811] shadow-glow-emerald"
+                : isMatchEnded
+                  ? "text-slate-300 hover:text-white hover:bg-[#11192b] border border-[#1f2d47]/50 cursor-pointer"
+                  : "text-slate-600 border border-[#1f2d47]/40 bg-[#080e1c]/40 cursor-not-allowed"
+            }`}
+          >
+            {!isMatchEnded && <Lock size={13} className="text-amber-500" />}
+            <span>OYUNCU REYTİNGLERİ</span>
+          </button>
+
+          {/* MAÇ RAPORU TAB (Spoiler Lock) */}
+          <button
+            onClick={() => {
+              if (isMatchEnded) setActiveTab("report");
+            }}
+            disabled={!isMatchEnded}
+            className={`px-4 py-2 rounded-lg font-bold text-xs sm:text-sm tracking-wide flex items-center space-x-1.5 transition ${
+              activeTab === "report"
+                ? "bg-gradient-to-r from-[#10b981] to-[#059669] text-[#050811] shadow-glow-emerald"
+                : isMatchEnded
+                  ? "text-slate-300 hover:text-white hover:bg-[#11192b] border border-[#1f2d47]/50 cursor-pointer"
+                  : "text-slate-600 border border-[#1f2d47]/40 bg-[#080e1c]/40 cursor-not-allowed"
+            }`}
+          >
+            {!isMatchEnded && <Lock size={13} className="text-amber-500" />}
+            <span>MAÇ RAPORU</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* 3. TAB 1: OVERVIEW & LIVE COMMENTARY SPOTLIGHT */}
+      {activeTab === "overview" && (
+        <div className="space-y-5 animate-fadeIn">
+          {/* ACTIVE COMMENTARY / GOAL SPOTLIGHT CARD (In-place replacement with zero layout jump) */}
+          {goalOverlay ? (
+            <div className="relative overflow-hidden rounded-2xl border-2 border-[#00f59b] bg-gradient-to-r from-[#10b981]/30 via-[#00f59b]/40 to-[#10b981]/30 p-6 sm:p-8 shadow-[0_0_40px_rgba(0,245,155,0.7)] backdrop-blur-md text-center transition-all animate-goal-flash">
+              <div className="absolute -right-10 -bottom-10 w-44 h-44 bg-[#00f59b]/20 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="absolute left-1/2 top-0 -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-[#00f59b] to-transparent"></div>
+
+              <div className="flex items-center justify-between mb-2">
+                <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[#10b981] text-[#050811] font-black text-xs uppercase tracking-wider shadow font-['Barlow_Condensed']">
+                  <span>
+                    ⚽ GOL KUTLAMASI // {getDisplayMinute(goalOverlay.min)}
+                  </span>
+                </div>
+
+                <span className="text-xs font-mono font-bold text-[#00f59b] flex items-center space-x-1">
+                  <span className="w-2 h-2 rounded-full bg-[#00f59b] inline-block animate-ping"></span>
+                  <span>TOP AĞLARDA!</span>
+                </span>
+              </div>
+
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-['Barlow_Condensed'] font-extrabold uppercase text-white tracking-widest drop-shadow-[0_0_25px_rgba(0,245,155,0.8)] mt-1">
+                ⚽ GOOOOOLLLLLL! ⚽
+              </div>
+
+              <div className="text-xl sm:text-2xl font-black text-[#fbbf24] mt-2 font-mono">
+                {goalOverlay.scorer}
+                {goalOverlay.assist ? ` (Asist: ${goalOverlay.assist})` : ""} (
+                {goalOverlay.isHome ? homeTeam.name : awayTeam.name})
+              </div>
+            </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-2xl border-2 border-[#f59e0b]/80 bg-gradient-to-r from-[#f59e0b]/15 via-[#fbbf24]/20 to-[#f59e0b]/15 p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+              <div className="absolute -right-10 -bottom-10 w-44 h-44 bg-[#f59e0b]/20 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="absolute left-1/2 top-0 -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-[#fbbf24] to-transparent"></div>
+
+              <div className="flex items-center justify-between mb-3">
+                <div className="inline-flex items-center space-x-2.5 px-3.5 py-1 rounded-full bg-[#f59e0b] text-[#080e1c] font-black text-xs uppercase tracking-wider shadow">
+                  <Flame size={14} className="fill-current" />
+                  <span className="font-['Barlow_Condensed'] font-bold">
+                    CANLI SPİKER ANLATIMI // {getDisplayMinute(currentMinute)}
+                  </span>
+                </div>
+
+                <span className="text-xs font-mono font-bold text-[#fbbf24] flex items-center space-x-1">
+                  <span className="w-2 h-2 rounded-full bg-[#f59e0b] inline-block animate-ping"></span>
+                  <span>KRİTİK AN</span>
+                </span>
+              </div>
+
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white leading-snug drop-shadow-md font-sans">
+                {activeSentence}
               </p>
+            </div>
+          )}
+
+          {/* PREVIOUS SIMULATION EVENTS STREAM TICKER */}
+          <div className="glass-panel rounded-xl p-4">
+            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-3 px-1 flex items-center justify-between pb-2 border-b border-[#1f2d47]">
+              <span>
+                Önceki Pozisyon Akışı ({visibleEvents.length} Pozisyon)
+              </span>
+              <span className="text-[11px] text-slate-500 font-normal">
+                Canlı Güncelleniyor
+              </span>
+            </h4>
+
+            {visibleEvents.length === 0 ? (
+              <div className="py-6 text-center text-xs font-mono text-slate-500">
+                Karşılaşmada henüz pozisyon yaşanmadı.
+              </div>
+            ) : (
+              <div className="max-h-48 overflow-y-auto pr-1 space-y-1.5 custom-scrollbar divide-y divide-[#1f2d47]/40">
+                {visibleEvents.map((evt, idx) => {
+                  const isGoal = evt.type.includes("GOAL");
+                  const isCard =
+                    evt.type.includes("YELLOW") || evt.type.includes("RED");
+                  const commentaryText = evt.steps
+                    ? evt.steps.join(" ")
+                    : evt.text || evt.description || "";
+
+                  return (
+                    <div
+                      key={evt.id || idx}
+                      className={`pt-2.5 pb-1 px-2 flex items-start space-x-3.5 hover:bg-[#11192b]/40 rounded-lg transition-colors ${
+                        isGoal ? "bg-rose-950/20" : ""
+                      }`}
+                    >
+                      <span
+                        className={`font-mono text-xs font-bold px-2 py-0.5 rounded border shrink-0 ${
+                          isGoal
+                            ? "bg-red-950/80 text-[#fbbf24] border-red-700/60"
+                            : "bg-[#090e1a] text-slate-400 border-[#1f2d47]"
+                        }`}
+                      >
+                        {getDisplayMinute(evt.min)}
+                      </span>
+
+                      <div className="flex-1 flex items-start justify-between gap-2">
+                        <div className="text-xs text-slate-200">
+                          {isGoal && <span className="mr-1.5">⚽</span>}
+                          {isCard && (
+                            <span className="inline-block w-2.5 h-3.5 bg-amber-400 rounded-sm mr-2 align-middle"></span>
+                          )}
+                          <span className="font-bold text-white mr-1.5">
+                            [{evt.isHome ? homeTeam.name : awayTeam.name}]
+                          </span>
+                          <span className="text-slate-300">{commentaryText}</span>
+                        </div>
+
+                        <span
+                          className={`text-[11px] font-mono font-semibold uppercase shrink-0 ${
+                            isGoal
+                              ? "text-[#fbbf24] font-bold"
+                              : isCard
+                                ? "text-amber-400"
+                                : "text-slate-400"
+                          }`}
+                        >
+                          {evt.type}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* MOMENTUM & 5-MIN POSSESSION TRACKER (Stitch Design Momentum Bar) */}
+          <div className="glass-panel rounded-xl p-4 lg:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
+                  Son 5 Dk. Baskı &amp; Topla Oynama (Momentum)
+                </span>
+                <span className="text-[10px] bg-[#0b1329] text-[#38bdf8] border border-[#38bdf8]/30 px-2 py-0.5 rounded font-mono font-bold">
+                  CANLI ANALİZ
+                </span>
+              </div>
+
+              {/* Live Percentage breakdown */}
+              <div className="flex items-center space-x-4 text-xs font-mono">
+                <span className="text-[#fbbf24] font-bold">
+                  {homeTeam.name}: %{dynamicPoss.home}
+                </span>
+                <span className="text-slate-600">—</span>
+                <span className="text-[#38bdf8] font-bold">
+                  %{dynamicPoss.away} :{awayTeam.name}
+                </span>
+              </div>
+            </div>
+
+            {/* Dual-Progress Momentum Bar */}
+            <div className="relative w-full h-3.5 bg-[#050913] rounded-full overflow-hidden p-0.5 border border-[#1f2d47]">
+              <div className="flex h-full rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-red-600 via-amber-500 to-[#f59e0b] rounded-l-full relative transition-all duration-700 shadow-[0_0_12px_rgba(245,158,11,0.6)]"
+                  style={{ width: `${dynamicPoss.home}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
+                </div>
+
+                <div
+                  className="h-full bg-gradient-to-r from-[#38bdf8] to-blue-600 rounded-r-full relative transition-all duration-700 shadow-[0_0_12px_rgba(56,189,248,0.6)]"
+                  style={{ width: `${dynamicPoss.away}%` }}
+                ></div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 1. EFSANEVİ CM 01/02 RETRO SKOR TABELASI (TOP SCOREBOARD) */}
-      <div className="bg-gradient-to-b from-[#0e1b40] to-[#09122c] border-b-4 border-[#1e2e67] p-3 sm:p-5 relative">
-        <div className="flex items-center justify-between max-w-4xl mx-auto gap-2">
-          
-          {/* Ev Sahibi Takım Kutusu */}
-          <div className="flex-1 flex items-center justify-end gap-3 sm:gap-4">
-            <div className="text-right">
-              <h2 className="text-lg sm:text-2xl font-black tracking-wide text-blue-400 drop-shadow-md">
-                {homeTeam.name || 'Ev Sahibi'}
-              </h2>
-              <div className="text-[11px] text-slate-300 font-mono flex flex-wrap justify-end gap-x-2">
-                {homeGoalScorers.map((g, idx) => (
-                  <span key={idx} className="text-yellow-400 font-semibold">
-                    {g.scorer || 'Gol'} {getDisplayMinute(g.min)}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#001038] border-2 border-yellow-400 rounded-lg flex items-center justify-center text-2xl sm:text-3xl font-black text-yellow-400 shadow-inner">
-              {liveHomeScore}
-            </div>
-          </div>
-
-          {/* Orta Dakika Kutusu */}
-          <div className="flex flex-col items-center justify-center px-2">
-            <div className="bg-[#000b26] border border-blue-500/50 px-3 py-1 rounded text-yellow-300 font-mono font-black text-base sm:text-xl shadow-md min-w-[70px] text-center">
-              {getDisplayMinute(currentMinute)}
-            </div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
-              {!hasStarted ? 'HAZIR' : isHalfTime ? 'DEVRE ARASI' : isMatchEnded ? 'BİTTİ' : 'CANLI'}
-            </span>
-          </div>
-
-          {/* Deplasman Takım Kutusu */}
-          <div className="flex-1 flex items-center justify-start gap-3 sm:gap-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#001038] border-2 border-yellow-400 rounded-lg flex items-center justify-center text-2xl sm:text-3xl font-black text-yellow-400 shadow-inner">
-              {liveAwayScore}
-            </div>
-            <div className="text-left">
-              <h2 className="text-lg sm:text-2xl font-black tracking-wide text-blue-400 drop-shadow-md">
-                {awayTeam.name || 'Deplasman'}
-              </h2>
-              <div className="text-[11px] text-slate-300 font-mono flex flex-wrap justify-start gap-x-2">
-                {awayGoalScorers.map((g, idx) => (
-                  <span key={idx} className="text-yellow-400 font-semibold">
-                    {g.scorer || 'Gol'} {getDisplayMinute(g.min)}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
+      {/* 4. TAB 2: MATCH STATS */}
+      {activeTab === "stats" && (
+        <div className="animate-fadeIn">
+          <MatchStats
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            stats={matchResult?.stats}
+          />
         </div>
-      </div>
+      )}
 
-      {/* 2. CM 01/02 RETRO SEKMELER (TOP TAB BAR) */}
-      <div className="bg-[#0b1736] border-b-2 border-[#1a2b5c] px-4 py-2 flex items-center justify-center gap-2 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`px-4 py-1.5 rounded text-xs font-black tracking-wider transition-all border cursor-pointer ${
-            activeTab === 'overview'
-              ? 'bg-yellow-400 text-slate-950 border-yellow-300 shadow-md scale-105'
-              : 'bg-[#0f2048] text-blue-200 border-blue-800/60 hover:bg-[#162d66]'
-          }`}
-        >
-          MATCH OVERVIEW
-        </button>
+      {/* 5. TAB 3: PLAYER RATINGS */}
+      {activeTab === "ratings" && (
+        <div className="animate-fadeIn">
+          <PlayerRatings
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            matchResult={matchResult}
+            playerStats={matchResult?.playerStats}
+          />
+        </div>
+      )}
 
-        <button
-          onClick={() => setActiveTab('stats')}
-          className={`px-4 py-1.5 rounded text-xs font-black tracking-wider transition-all border cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'stats'
-              ? 'bg-yellow-400 text-slate-950 border-yellow-300 shadow-md scale-105'
-              : 'bg-[#0f2048] text-blue-200 border-blue-800/60 hover:bg-[#162d66]'
-          }`}
-        >
-          {!isMatchEnded && <Lock size={12} className="text-yellow-400" />}
-          <span>MATCH STATS</span>
-        </button>
+      {/* 6. TAB 4: MATCH REPORT */}
+      {activeTab === "report" && (
+        <div className="animate-fadeIn">
+          <MatchReport
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            matchResult={matchResult}
+            playerStats={matchResult?.playerStats}
+          />
+        </div>
+      )}
 
-        <button
-          onClick={() => setActiveTab('ratings')}
-          className={`px-4 py-1.5 rounded text-xs font-black tracking-wider transition-all border cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'ratings'
-              ? 'bg-yellow-400 text-slate-950 border-yellow-300 shadow-md scale-105'
-              : 'bg-[#0f2048] text-blue-200 border-blue-800/60 hover:bg-[#162d66]'
-          }`}
-        >
-          {!isMatchEnded && <Lock size={12} className="text-yellow-400" />}
-          <span>PLAYER RATINGS</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('report')}
-          className={`px-4 py-1.5 rounded text-xs font-black tracking-wider transition-all border cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'report'
-              ? 'bg-yellow-400 text-slate-950 border-yellow-300 shadow-md scale-105'
-              : 'bg-[#0f2048] text-blue-200 border-blue-800/60 hover:bg-[#162d66]'
-          }`}
-        >
-          {!isMatchEnded && <Lock size={12} className="text-yellow-400" />}
-          <span>MATCH REPORT</span>
-        </button>
-      </div>
-
-      {/* 3. ANA İÇERİK ALANI */}
-      <div className="p-4 sm:p-6 bg-gradient-to-b from-[#070e24] via-[#0b1633] to-[#060c20] min-h-[420px] flex flex-col justify-between">
-        
-        {/* MAÇ BAŞLAMADAN ÖNCEKİ KICK OFF EKRANI */}
-        {!hasStarted && matchTimeSec === 0 && (
-          <div className="bg-[#091538] border-4 border-yellow-400/80 rounded-2xl p-6 text-center my-auto shadow-2xl space-y-4 animate-fadeIn">
-            <h3 className="text-xl sm:text-3xl font-black text-yellow-300 tracking-wider">
-              ⚽ MAÇ BAŞLAMAK ÜZERE ⚽
-            </h3>
-
-            <div className="text-xl sm:text-3xl font-extrabold text-white font-mono bg-[#030816] py-3 px-6 rounded-xl border border-blue-800/60 inline-block shadow-inner">
-              {homeTeam.name || 'Ev Sahibi'} vs {awayTeam.name || 'Deplasman'}
-            </div>
-
-            <p className="text-sm font-mono text-slate-300">
-              Takımlar sahaya çıktı, hakem ilk düdük için hazırlıklarını tamamlıyor.
-            </p>
-
-            <div>
-              <button
-                onClick={handleKickOffMatch}
-                className="bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400 text-slate-950 font-black text-base sm:text-lg px-8 py-3.5 rounded-xl shadow-xl hover:scale-105 transition-all border-2 border-yellow-200 cursor-pointer active:scale-95"
-              >
-                ⚡ MAÇI BAŞLAT (KICK OFF) ⚡
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* DEVRE ARASI ÖZEL EKRANI */}
-        {isHalfTime && (
-          <div className="bg-[#091538] border-4 border-yellow-400/80 rounded-2xl p-6 text-center my-auto shadow-2xl space-y-4 animate-fadeIn">
-            <h3 className="text-xl sm:text-3xl font-black text-yellow-300 tracking-wider">
-              ☕ İLK YARI SONA ERDİ ☕
-            </h3>
-
-            <div className="text-2xl sm:text-4xl font-extrabold text-white font-mono bg-[#030816] py-3 px-6 rounded-xl border border-blue-800/60 inline-block shadow-inner">
-              {homeTeam.name || 'Ev Sahibi'} {liveHomeScore} - {liveAwayScore} {awayTeam.name || 'Deplasman'}
-            </div>
-
-            <p className="text-sm font-mono text-slate-300">
-              İlk yarıya +{stoppageTime.firstHalf} dakika ek süre eklendi ve tamamlandı. Takımlar soyunma odasında.
-            </p>
-
-            <div>
+      {/* 7. BOTTOM SIMULATION CONTROL FOOTER (Fixed Control Bar) */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-[#080e1c]/95 border-t border-[#1f2d47] p-3 sm:p-4 backdrop-blur-xl shadow-2xl">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+          {/* Left: Play / Pause Button & Speed Controls */}
+          <div className="flex items-center space-x-3">
+            {isHalfTime ? (
               <button
                 onClick={handleStartSecondHalf}
-                className="bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 font-black text-base sm:text-lg px-8 py-3.5 rounded-xl shadow-xl hover:scale-105 transition-all border-2 border-emerald-300 cursor-pointer active:scale-95"
+                type="button"
+                className="flex items-center space-x-2 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#34d399] hover:to-[#10b981] text-[#050811] font-black font-['Barlow_Condensed'] text-sm px-6 py-2.5 rounded-xl shadow-glow-emerald transition transform active:scale-95 uppercase tracking-wider cursor-pointer"
               >
-                ⚡ İKİNCİ YARIYI BAŞLAT ⚡
+                <Play size={18} fill="currentColor" />
+                <span>İKINCI YARIYI BAŞLAT ➔</span>
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* SEKMEYE GÖRE İÇERİK (Maç Başlamışsa & Devre Arası Değilken) */}
-        {hasStarted && !isHalfTime && activeTab === 'overview' && (
-          <div className="space-y-6 flex-1 flex flex-col justify-center">
-            
-            {/* CM 01/02 EFSANEVİ DEV SARI SPİKER BANTI (YELLOW FLASH TICKER - CLEAN WITHOUT MINUTE) */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500 via-amber-300 to-yellow-500 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-              
-              <div className="relative bg-[#ffff00] text-slate-950 p-6 sm:p-8 rounded-xl border-4 border-amber-400 shadow-2xl text-center min-h-[140px] flex flex-col items-center justify-center transform transition-all duration-300">
-                <span className="text-xs font-mono font-black tracking-widest text-slate-800 uppercase mb-2 bg-yellow-300/80 px-3 py-0.5 rounded-full">
-                  ⚡ CANLI SPİKER ANLATIMI ⚡
-                </span>
-                
-                <p className="text-lg sm:text-2xl font-black leading-snug tracking-tight text-slate-950 font-sans animate-pulse max-w-3xl">
-                  {activeSentence}
-                </p>
-              </div>
-            </div>
-
-            {/* DİNAMİK SON 5 DAKİKA TOPLA OYNAMA BAR (DYNAMIC ROLLING POSSESSION BAR) */}
-            <div className="bg-[#0a1538] border border-blue-800/60 rounded-xl p-4 shadow-lg">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-300 mb-2 font-mono">
-                <span>Last 5 Mins (Son 5 Dk Topla Oynama)</span>
-                <span className="text-yellow-400 font-black">
-                  {dynamicPoss.home}% - {dynamicPoss.away}%
-                </span>
-              </div>
-              <div className="w-full h-3.5 bg-slate-950 rounded-full overflow-hidden flex border border-blue-900">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-500" 
-                  style={{ width: `${dynamicPoss.home}%` }}
-                ></div>
-                <div 
-                  className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all duration-500" 
-                  style={{ width: `${dynamicPoss.away}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* HAKEM VE HAVA DURUMU SÜSÜ */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-2 border-t border-blue-900/40 pt-3">
-              <span>Referee: Michele Giordano</span>
-              <span>Weather: Dry, 18°C</span>
-              <span>Stadium: Giuseppe Meazza</span>
-            </div>
-
-          </div>
-        )}
-
-        {/* MAÇ STATS SEKMESİ (MAÇ DEVAM EDERKEN KİLİTLİ) */}
-        {hasStarted && !isHalfTime && activeTab === 'stats' && (
-          !isMatchEnded ? (
-            <div className="bg-[#091538] border-4 border-yellow-400/80 rounded-2xl p-8 text-center my-auto shadow-2xl space-y-4 animate-fadeIn">
-              <div className="w-16 h-16 bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto border border-yellow-400/40">
-                <Lock size={32} className="text-yellow-400" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-yellow-300 tracking-wider">
-                🔒 MAÇ DEVAM EDİYOR 🔒
-              </h3>
-              <p className="text-sm font-mono text-slate-300 max-w-md mx-auto leading-relaxed">
-                Sürprizleri önlemek için istatistikler hakem son düdüğü çaldığında erişilebilir olacaktır.
-              </p>
-              <div className="text-xs font-mono text-yellow-400 font-bold bg-yellow-400/10 py-1.5 px-4 rounded-full inline-block border border-yellow-400/30">
-                Mevcut Dakika: {getDisplayMinute(currentMinute)}
-              </div>
-            </div>
-          ) : (
-            <MatchStats
-              homeTeam={homeTeam}
-              awayTeam={awayTeam}
-              stats={matchResult ? matchResult.stats : null}
-            />
-          )
-        )}
-
-        {/* PLAYER RATINGS SEKMESİ (MAÇ DEVAM EDERKEN KİLİTLİ) */}
-        {hasStarted && !isHalfTime && activeTab === 'ratings' && (
-          !isMatchEnded ? (
-            <div className="bg-[#091538] border-4 border-yellow-400/80 rounded-2xl p-8 text-center my-auto shadow-2xl space-y-4 animate-fadeIn">
-              <div className="w-16 h-16 bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto border border-yellow-400/40">
-                <Lock size={32} className="text-yellow-400" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-yellow-300 tracking-wider">
-                🔒 MAÇ DEVAM EDİYOR 🔒
-              </h3>
-              <p className="text-sm font-mono text-slate-300 max-w-md mx-auto leading-relaxed">
-                Sürprizleri önlemek için oyuncu performans puanları maç tamamlandığında açılacaktır.
-              </p>
-              <div className="text-xs font-mono text-yellow-400 font-bold bg-yellow-400/10 py-1.5 px-4 rounded-full inline-block border border-yellow-400/30">
-                Mevcut Dakika: {getDisplayMinute(currentMinute)}
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Ev Sahibi Puanları */}
-              <div className="bg-[#091536] border border-blue-800/60 rounded-xl p-4">
-                <h3 className="text-sm font-black text-yellow-400 mb-3 border-b border-blue-800/40 pb-2 flex justify-between">
-                  <span>{homeTeam.name} - OYUNCU PUANLARI</span>
-                  <span className="text-slate-400">RATINGS</span>
-                </h3>
-                <div className="space-y-1.5 text-xs font-mono">
-                  {(homeTeam.squad || []).map((p, idx) => {
-                    const pStat = matchResult?.playerStats?.[`home_${p.name}`] || { rating: 7.0, goals: 0 };
-                    return (
-                      <div key={idx} className="flex justify-between items-center bg-[#0d1e4a]/60 px-3 py-1.5 rounded border border-blue-900/30">
-                        <span className="font-semibold text-slate-200">
-                          {p.pos || 'CM'} - {p.name} {pStat.goals > 0 && `⚽`.repeat(pStat.goals)}
-                        </span>
-                        <span className={`font-extrabold px-2 py-0.5 rounded ${
-                          pStat.rating >= 8.0 ? 'bg-emerald-500 text-slate-950' : pStat.rating >= 7.0 ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
-                        }`}>
-                          {pStat.rating}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Deplasman Puanları */}
-              <div className="bg-[#091536] border border-blue-800/60 rounded-xl p-4">
-                <h3 className="text-sm font-black text-yellow-400 mb-3 border-b border-blue-800/40 pb-2 flex justify-between">
-                  <span>{awayTeam.name} - OYUNCU PUANLARI</span>
-                  <span className="text-slate-400">RATINGS</span>
-                </h3>
-                <div className="space-y-1.5 text-xs font-mono">
-                  {(awayTeam.squad || []).map((p, idx) => {
-                    const pStat = matchResult?.playerStats?.[`away_${p.name}`] || { rating: 7.0, goals: 0 };
-                    return (
-                      <div key={idx} className="flex justify-between items-center bg-[#0d1e4a]/60 px-3 py-1.5 rounded border border-blue-900/30">
-                        <span className="font-semibold text-slate-200">
-                          {p.pos || 'CM'} - {p.name} {pStat.goals > 0 && `⚽`.repeat(pStat.goals)}
-                        </span>
-                        <span className={`font-extrabold px-2 py-0.5 rounded ${
-                          pStat.rating >= 8.0 ? 'bg-emerald-500 text-slate-950' : pStat.rating >= 7.0 ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
-                        }`}>
-                          {pStat.rating}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )
-        )}
-
-        {/* MATCH REPORT SEKMESİ (MAÇ DEVAM EDERKEN KİLİTLİ) */}
-        {hasStarted && !isHalfTime && activeTab === 'report' && (
-          !isMatchEnded ? (
-            <div className="bg-[#091538] border-4 border-yellow-400/80 rounded-2xl p-8 text-center my-auto shadow-2xl space-y-4 animate-fadeIn">
-              <div className="w-16 h-16 bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto border border-yellow-400/40">
-                <Lock size={32} className="text-yellow-400" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-yellow-300 tracking-wider">
-                🔒 MAÇ DEVAM EDİYOR 🔒
-              </h3>
-              <p className="text-sm font-mono text-slate-300 max-w-md mx-auto leading-relaxed">
-                Sürprizleri önlemek için detaylı maç spiker raporu ve Maçın Adamı analizi maç tamamlandığında açılacaktır.
-              </p>
-              <div className="text-xs font-mono text-yellow-400 font-bold bg-yellow-400/10 py-1.5 px-4 rounded-full inline-block border border-yellow-400/30">
-                Mevcut Dakika: {getDisplayMinute(currentMinute)}
-              </div>
-            </div>
-          ) : (
-            <MatchReport
-              homeTeam={homeTeam}
-              awayTeam={awayTeam}
-              matchResult={matchResult}
-              playerStats={matchResult ? matchResult.playerStats : null}
-            />
-          )
-        )}
-
-      </div>
-
-      {/* 4. ALTKISIM KONTROL VE EYLEM BUTONLARI (CM 01/02 BUTTON BAR) */}
-      <div className="bg-[#091433] border-t-4 border-[#1e2e67] p-3 flex flex-wrap items-center justify-between gap-3">
-        
-        {/* Sol Hız ve Oynat Butonları */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              if (!hasStarted) setHasStarted(true);
-              setIsPlaying(!isPlaying);
-            }}
-            className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black px-4 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
-          >
-            {isPlaying ? <Pause size={15} /> : <Play size={15} />}
-            <span>{isPlaying ? 'PAUSE (DURAKLAT)' : 'PLAY (DEVAM ET)'}</span>
-          </button>
-
-          <div className="flex items-center bg-[#050b1a] rounded-lg p-1 border border-blue-900 text-xs font-mono">
-            <span className="text-slate-400 text-[10px] px-2 font-bold">HIZ:</span>
-            {[1, 2, 5].map(spd => (
+            ) : (
               <button
-                key={spd}
-                onClick={() => setSimSpeed(spd)}
-                className={`px-2.5 py-1 rounded font-black cursor-pointer ${
-                  simSpeed === spd ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                onClick={handleTogglePlay}
+                type="button"
+                className={`flex items-center space-x-2 font-black font-['Barlow_Condensed'] text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-glow-amber transition transform active:scale-95 uppercase tracking-wider cursor-pointer ${
+                  isPlaying
+                    ? "bg-gradient-to-r from-[#f59e0b] to-[#d97706] hover:from-[#fbbf24] hover:to-[#f59e0b] text-[#080e1c]"
+                    : "bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#34d399] hover:to-[#10b981] text-[#050811]"
                 }`}
               >
-                {spd}x
+                {isPlaying ? (
+                  <Pause size={16} />
+                ) : (
+                  <Play size={16} fill="currentColor" />
+                )}
+                <span>
+                  {isPlaying
+                    ? "DURAKLAT (PAUSE)"
+                    : hasStarted
+                      ? "DEVAM ET (RESUME)"
+                      : "MAÇI BAŞLAT (KICK-OFF)"}
+                </span>
               </button>
-            ))}
+            )}
+
+            {/* Speed Switcher Pills */}
+            <div className="flex items-center bg-[#090e1a] border border-[#1f2d47] rounded-xl p-1 space-x-1 font-mono text-xs">
+              <span className="text-slate-400 text-[10px] px-2 font-bold uppercase hidden sm:inline">
+                HIZ:
+              </span>
+              <button
+                onClick={() => setSimSpeed(1)}
+                type="button"
+                className={`px-3 py-1 rounded-lg transition font-bold ${
+                  simSpeed === 1
+                    ? "bg-[#38bdf8] text-[#080e1c] shadow-[0_0_12px_rgba(56,189,248,0.5)]"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                1x
+              </button>
+              <button
+                onClick={() => setSimSpeed(2)}
+                type="button"
+                className={`px-3 py-1 rounded-lg transition font-bold ${
+                  simSpeed === 2
+                    ? "bg-[#38bdf8] text-[#080e1c] shadow-[0_0_12px_rgba(56,189,248,0.5)]"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                2x
+              </button>
+              <button
+                onClick={() => setSimSpeed(5)}
+                type="button"
+                className={`px-3.5 py-1 rounded-lg transition font-bold ${
+                  simSpeed === 5
+                    ? "bg-[#38bdf8] text-[#080e1c] shadow-[0_0_12px_rgba(56,189,248,0.5)]"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                5x
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Simulation Actions (Restart Match) */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={onResetMatch}
+              type="button"
+              className="flex items-center space-x-2 bg-[#090e1a] hover:bg-[#11192b] text-slate-300 hover:text-white text-xs font-semibold px-4 py-2.5 rounded-xl border border-[#1f2d47] transition hover:border-slate-400 cursor-pointer"
+            >
+              <RotateCcw size={14} />
+              <span>Yeniden Simüle Et</span>
+            </button>
           </div>
         </div>
-
-        {/* Sağ Yeniden Başlat & Anında Bitir */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onResetMatch}
-            className="bg-[#0e214d] hover:bg-[#16306e] text-blue-200 border border-blue-700/60 font-mono font-bold px-3 py-2 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer"
-          >
-            <RotateCcw size={14} />
-            <span>Yeniden Simüle Et</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setMatchTimeSec(maxMatchMin * 60);
-              setHasStarted(true);
-              setIsPlaying(false);
-              setIsHalfTime(false);
-              const motm = matchResult?.manOfTheMatch;
-              const motmText = motm ? ` 🌟 Maçın Adamı: ${motm.name} (${motm.rating} Puan).` : '';
-              setActiveSentence(`🏆 MAÇ BİTTİ! Hakem son düdüğü çaldı.${motmText} Simülasyon tamamlandı.`);
-              setActiveTab('report');
-            }}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-black px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow-lg transition-all cursor-pointer"
-          >
-            <FastForward size={14} />
-            <span>Anında Bitir</span>
-          </button>
-        </div>
-
-      </div>
-
+      </footer>
     </div>
   );
+}
+
+function getAmbientSentence(min, homeName, awayName) {
+  const sentences = [
+    `Tribünlerden coşkulu tezahüratlar yükseliyor, ${homeName} taraftarları takımlarına büyük destek veriyor.`,
+    `Orta sahada kıyasıya ikili mücadeleler yaşanıyor, ${awayName} presle topu kapmaya çalışıyor.`,
+    `Maçın temposu oldukça yüksek, iki takım da disiplinli savunma anlayışını koruyor.`,
+    `Teknik direktörler saha kenarında oyuncularına uyarılarda bulunuyor.`,
+    `Orta alanda kısa paslarla oyun yeniden kuruluyor.`,
+  ];
+  return sentences[min % sentences.length];
 }

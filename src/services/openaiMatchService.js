@@ -1,22 +1,21 @@
-// OpenAI ChatGPT Maç Simülasyonu Servisi (GPT-4o-Mini Powered Match Engine)
+// OpenAI ChatGPT Maç Simülasyonu Servisi (GPT-4o / GPT-4o-Mini Powered Match Engine)
 
-import { FORMATION_LAYOUTS } from '../data/teams';
-import { simulateFullMatch as fallbackSimulateMatch } from '../engine/matchEngine';
+import { FORMATION_LAYOUTS } from "../data/teams";
+import { simulateFullMatch as fallbackSimulateMatch } from "../engine/matchEngine";
 
 const SYSTEM_PROMPT = `You are a World-Class Turkish Football Match Engine & Commentary Simulator (legendary spiker persona like Yalçın Çetin & Ercan Taner).
 Your task is to simulate a realistic, thrilling, and tactical 90-minute football match between two teams based on their lineups, player real-world skill levels, and tactics.
 
 STRICT INSTRUCTIONS:
 1. Output MUST be a valid JSON object matching the exact schema provided.
-2. Evaluate real-world abilities of all players in both 11-player lineups.
-3. MANDATORY EVENT QUANTITY CONSTRAINT: You MUST generate BETWEEN 15 AND 25 timeline items across the 90 minutes of the match. NEVER return fewer than 15 events!
-4. MANDATORY EVENT TYPE DIVERSITY: Distribute the 15-25 events dynamically using a realistic mix:
-   - 4 to 8 Shots / Saves / Misses / Post hits ("SAVE", "MISS", "POST")
-   - 4 to 7 Corner Kicks ("CORNER")
+2. Evaluate real-world abilities of all players in both 11-player lineups based on your knowledge of football history and current form.
+3. MANDATORY EVENT QUANTITY CONSTRAINT: You MUST generate BETWEEN 18 AND 25 timeline items across the 90 minutes of the match. NEVER return fewer than 18 events!
+4. MANDATORY EVENT TYPE DIVERSITY: Distribute the 18-25 events dynamically using a realistic mix:
+   - 6 to 10 Shots / Saves / Misses / Post hits ("SAVE", "MISS", "POST")
+   - 4 to 8 Corner Kicks ("CORNER")
    - 3 to 6 Fouls and Offside decisions ("FOUL", "OFFSIDE")
-   - 2 to 4 Yellow/Red cards ("YELLOW", "RED")
-   - Occasional Direct Free Kicks, Penalty Kicks, or Injuries ("FREEKICK_GOAL", "PENALTY_GOAL", "INJURY")
-   - Realistic Goals matching the final score ("GOAL", "CORNER_GOAL")
+   - 1 to 4 Yellow/Red cards ("YELLOW", "RED")
+   - Realistic Goals matching the final score ("GOAL", "CORNER_GOAL", "FREEKICK_GOAL", "PENALTY_GOAL")
 
 5. Allowed Event Types (Use ONLY these exact uppercase strings for 'type'):
    - "GOAL" (Open play goal)
@@ -31,7 +30,6 @@ STRICT INSTRUCTIONS:
    - "RED" (Red card)
    - "FOUL" (Foul committed)
    - "OFFSIDE" (Offside decision)
-   - "INJURY" (Player injury)
 
 6. VERY IMPORTANT - MANDATORY COMPLETE EVENT OUTCOME SCHEMA:
    For EVERY item in 'timeline', you MUST provide a 'steps' array containing 4 to 8 detailed, sequential Turkish commentary sentences.
@@ -94,47 +92,53 @@ export async function simulateMatchWithOpenAI(homeTeam, awayTeam) {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
   // API Key kontrolü - Eğer tanımlı değilse veya varsayılansa yerel motor çalışır
-  if (!apiKey || apiKey === 'your_openai_api_key_here') {
-    console.warn("OpenAI API Key bulunamadı (.env dosyasını doldurun). Yerel simülatör çalıştırılıyor...");
+  if (!apiKey || apiKey === "your_openai_api_key_here") {
+    console.warn(
+      "OpenAI API Key bulunamadı (.env dosyasını doldurun). Yerel simülatör çalıştırılıyor...",
+    );
     return fallbackSimulateMatch(homeTeam, awayTeam);
   }
 
   // OpenAI Kullanıcı Mesajının Hazırlanması
-  const homeSquadList = (homeTeam.squad || []).map((p, i) => `${i+1}. ${p.pos || 'CM'} - ${p.name}`).join('\n');
-  const awaySquadList = (awayTeam.squad || []).map((p, i) => `${i+1}. ${p.pos || 'CM'} - ${p.name}`).join('\n');
+  const homeSquadList = (homeTeam.squad || [])
+    .map((p, i) => `${i + 1}. ${p.pos || "CM"} - ${p.name}`)
+    .join("\n");
+  const awaySquadList = (awayTeam.squad || [])
+    .map((p, i) => `${i + 1}. ${p.pos || "CM"} - ${p.name}`)
+    .join("\n");
 
   const userPrompt = `Simulate the following football match:
 
 HOME TEAM:
-Name: ${homeTeam.name || 'Ev Sahibi'}
-Formation: ${homeTeam.formation || '4-4-2'}
+Name: ${homeTeam.name || "Ev Sahibi"}
+Formation: ${homeTeam.formation || "4-4-2"}
 Lineup:
 ${homeSquadList}
 
 AWAY TEAM:
-Name: ${awayTeam.name || 'Deplasman'}
-Formation: ${awayTeam.formation || '4-4-2'}
+Name: ${awayTeam.name || "Deplasman"}
+Formation: ${awayTeam.formation || "4-4-2"}
 Lineup:
 ${awaySquadList}
 
-CRITICAL: Generate BETWEEN 15 AND 25 dynamic timeline events spanning minute 1 to 90 with diverse event types (corners, fouls, yellow cards, offsides, saves, misses, posts, goals). Do NOT generate FINAL_WHISTLE items. Write dramatic multi-step Turkish spiker commentary steps array for EVERY single item using player names from the lineups above. Return ONLY the JSON object.`;
+CRITICAL: Generate BETWEEN 18 AND 25 dynamic timeline events spanning minute 1 to 90 with diverse event types (corners, fouls, yellow cards, offsides, saves, misses, posts, goals). Do NOT generate FINAL_WHISTLE items. Write dramatic multi-step Turkish spiker commentary steps array for EVERY single item using player names from the lineups above. Return ONLY the JSON object.`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey.trim()}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey.trim()}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userPrompt }
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
         ],
-        response_format: { type: 'json_object' },
-        temperature: 0.75
-      })
+        response_format: { type: "json_object" },
+        temperature: 0.75,
+      }),
     });
 
     if (!response.ok) {
@@ -149,7 +153,6 @@ CRITICAL: Generate BETWEEN 15 AND 25 dynamic timeline events spanning minute 1 t
 
     // Dönen veriyi uygulamamızın formatına dönüştürme
     return formatAiResponse(parsed, homeTeam, awayTeam);
-
   } catch (error) {
     console.error("OpenAI Simülasyon Hatası:", error);
     return fallbackSimulateMatch(homeTeam, awayTeam);
@@ -163,12 +166,20 @@ function formatAiResponse(aiData, homeTeam, awayTeam) {
   const timeline = aiData.timeline || [];
 
   // FINAL_WHISTLE / END olaylarını temizleme ve her olaya benzersiz ID verme
-  const validTimeline = timeline.filter(evt => evt.type !== 'FINAL_WHISTLE' && evt.type !== 'END_MATCH' && evt.type !== 'END');
+  const validTimeline = timeline.filter(
+    (evt) =>
+      evt.type !== "FINAL_WHISTLE" &&
+      evt.type !== "END_MATCH" &&
+      evt.type !== "END",
+  );
 
   const events = validTimeline.map((evt, idx) => {
-    let steps = Array.isArray(evt.steps) && evt.steps.length > 0
-      ? evt.steps
-      : (evt.text ? [evt.text] : ["Pozisyon gelişiyor..."]);
+    let steps =
+      Array.isArray(evt.steps) && evt.steps.length > 0
+        ? evt.steps
+        : evt.text
+          ? [evt.text]
+          : ["Pozisyon gelişiyor..."];
 
     return {
       id: `evt_${evt.min}_${idx}_${evt.type}`,
@@ -176,42 +187,42 @@ function formatAiResponse(aiData, homeTeam, awayTeam) {
       type: evt.type,
       steps: steps,
       text: steps.join(" "),
-      teamId: evt.team === 'home' ? homeTeam.id : awayTeam.id,
-      isHome: evt.team === 'home',
-      scorer: evt.scorer
+      teamId: evt.team === "home" ? homeTeam.id : awayTeam.id,
+      isHome: evt.team === "home",
+      scorer: evt.scorer,
     };
   });
 
   // 2D Saha Highlight'ları Üretme
-  const highlights = events.map(evt => ({
+  const highlights = events.map((evt) => ({
     min: evt.min,
     type: evt.type,
     attackingTeamId: evt.isHome ? homeTeam.id : awayTeam.id,
-    primaryPlayerName: evt.scorer || evt.text.split(' ')[0] || "Oyuncu",
-    durationMs: 4000
+    primaryPlayerName: evt.scorer || evt.text.split(" ")[0] || "Oyuncu",
+    durationMs: 4000,
   }));
 
   // Oyuncu İstatistik Nesnesi
   const playerStats = {};
   const ratings = aiData.playerRatings || {};
 
-  (ratings.home || []).forEach(p => {
+  (ratings.home || []).forEach((p) => {
     playerStats[`home_${p.name}`] = {
       name: p.name,
       teamId: homeTeam.id,
       rating: p.rating || 7.0,
       goals: p.goals || 0,
-      assists: p.assists || 0
+      assists: p.assists || 0,
     };
   });
 
-  (ratings.away || []).forEach(p => {
+  (ratings.away || []).forEach((p) => {
     playerStats[`away_${p.name}`] = {
       name: p.name,
       teamId: awayTeam.id,
       rating: p.rating || 7.0,
       goals: p.goals || 0,
-      assists: p.assists || 0
+      assists: p.assists || 0,
     };
   });
 
@@ -234,11 +245,11 @@ function formatAiResponse(aiData, homeTeam, awayTeam) {
       homeRedCards: stats.redCards?.home || 0,
       awayRedCards: stats.redCards?.away || 0,
       homeXG: stats.xG?.home || 1.5,
-      awayXG: stats.xG?.away || 1.1
+      awayXG: stats.xG?.away || 1.1,
     },
     events,
     highlights,
     playerStats,
-    manOfTheMatch: summary.manOfTheMatch
+    manOfTheMatch: summary.manOfTheMatch,
   };
 }

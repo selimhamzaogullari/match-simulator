@@ -1,34 +1,146 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* ==========================================================================
+   TACTICAL MATCH PULSE - TAILWIND V4 THEME CONFIGURATION
+   ========================================================================== */
+
+@theme {
+  --color-pitch-lowest: #050913;
+  --color-pitch-dark: #080e1c;
+  --color-pitch-surface: #0d1321;
+  --color-pitch-card: #121929;
+  --color-pitch-lighter: #1a2338;
+  --color-pitch-border: #1f2d47;
+  --color-pitch-highlight: #2a3b5c;
+
+  --color-stadium-950: #050811;
+  --color-stadium-900: #090e1a;
+  --color-stadium-850: #0c1322;
+  --color-stadium-800: #11192b;
+  --color-stadium-700: #1c273e;
+
+  --color-turf-dark: #051b14;
+  --color-turf-mid: #08261d;
+  --color-turf-light: #0c3327;
+
+  --color-amber-accent: #f59e0b;
+  --color-amber-glow: #fbbf24;
+  --color-amber-soft: #d97706;
+
+  --color-cyan-glow: #38bdf8;
+  --color-cyan-dim: #0284c7;
+
+  --color-pulse-emerald: #10b981;
+  --color-pulse-neon: #00f59b;
+  --color-pulse-amber: #f59e0b;
+  --color-pulse-crimson: #dc2626;
+
+  --color-electric-400: #38bdf8;
+  --color-electric-500: #0ea5e9;
+
+  --font-athletic: "Barlow Condensed", sans-serif;
+  --font-display: "Chakra Petch", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
+
+  --shadow-glow-amber: 0 0 25px -5px rgba(245, 158, 11, 0.35);
+  --shadow-glow-cyan: 0 0 25px -5px rgba(56, 189, 248, 0.35);
+  --shadow-glow-emerald: 0 0 25px -5px rgba(16, 185, 129, 0.4);
+  --shadow-glow-neon: 0 0 25px -5px rgba(0, 245, 155, 0.5);
+}
 
 :root {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   color-scheme: dark;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #020617;
-  color: #f8fafc;
+  background-color: #080e1c;
+  color: #f1f5f9;
+  min-height: 100vh;
   overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
 }
 
-/* Custom Scrollbar for CM 03/04 Lists */
-.custom-scrollbar::-webkit-scrollbar {
+/* Custom Scrollbar */
+::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+::-webkit-scrollbar-track {
+  background: #080e1c;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2d47;
   border-radius: 4px;
 }
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
-  border-radius: 4px;
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.8);
+/* Pitch Grid Pattern */
+.pitch-grid {
+  background-image: 
+    linear-gradient(to right, rgba(31, 45, 71, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(31, 45, 71, 0.25) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Tactical Grid Pattern */
+.tactical-grid {
+  background-image: 
+    linear-gradient(rgba(30, 50, 100, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 50, 100, 0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Tactical Glow Effect */
+.tactical-border-glow {
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3), 0 0 24px -4px rgba(56, 189, 248, 0.15);
+}
+
+/* Pitch Stripes */
+.pitch-stripes {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(10, 42, 33, 0.95) 0px,
+    rgba(10, 42, 33, 0.95) 48px,
+    rgba(7, 34, 26, 0.95) 48px,
+    rgba(7, 34, 26, 0.95) 96px
+  );
+}
+
+/* Player Token Hover Effect */
+.player-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+}
+
+.player-card:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.6), 0 0 16px 2px rgba(0, 245, 155, 0.35);
+  border-color: rgba(0, 245, 155, 0.6);
+  z-index: 40;
+}
+
+/* Fast Strobe Goal Flash Pulse Animation (0.35s rapid strobe) */
+@keyframes goalFlashPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 45px rgba(0, 245, 155, 0.8), inset 0 0 25px rgba(0, 245, 155, 0.4);
+    border-color: #00f59b;
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.995);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.25), inset 0 0 5px rgba(16, 185, 129, 0.1);
+    border-color: #059669;
+  }
+}
+
+.animate-goal-flash {
+  animation: goalFlashPulse 0.35s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

@@ -10,49 +10,59 @@ export default function SquadSetupWizard({
   onBackToDraftScreen,
   onStartMatch
 }) {
-  const [step, setStep] = useState(1); // 1 = Ev Sahibi Taktik, 2 = Deplasman Taktik
+  const [step, setStep] = useState(1); // 1 = 1. Takım Taktik, 2 = 2. Takım Taktik
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6">
+    <div className="w-full max-w-6xl mx-auto space-y-6">
       
-      {/* Wizard İlerleme Çubuğu */}
-      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-xl flex items-center justify-between">
+      {/* WIZARD STEPPER BAR (Stitch Design Header Stepper) */}
+      <div className="bg-[#0c1322]/80 border border-slate-800/80 rounded-2xl p-3 px-5 backdrop-blur-md flex flex-wrap items-center justify-between gap-4 shadow-xl">
         
         {/* Oyuncu Seçim Ekranına Dön Butonu */}
         <button
           onClick={onBackToDraftScreen}
-          className="text-xs text-slate-400 hover:text-emerald-400 font-mono font-bold flex items-center gap-1.5 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 hover:border-slate-700 transition-all"
+          type="button"
+          className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#11192b]/90 hover:bg-[#1c273e]/80 text-slate-300 hover:text-white border border-slate-700/60 transition-all text-xs font-semibold tracking-wide cursor-pointer font-sans"
         >
-          <Search size={14} />
-          <span>🔍 Oyuncu Seçim Ekranı</span>
+          <Search size={14} className="text-[#38bdf8]" />
+          <span>Kadro Kurulumuna Dön</span>
         </button>
 
-        {/* Adım 1 & Adım 2 Göstergesi */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-base font-mono ${
-              step === 1 ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-900/50' : 'bg-slate-800 text-emerald-400'
-            }`}>
-              1
-            </div>
-            <span className={`text-xs font-extrabold ${step === 1 ? 'text-white' : 'text-slate-400'}`}>
-              {homeTeam.name || "1. Takım"} Taktiği
-            </span>
+        {/* Tactical Stepper Navigation */}
+        <nav aria-label="Aşama Takibi" className="flex items-center gap-3">
+          {/* Step 1: 1. Takım */}
+          <div 
+            onClick={() => setStep(1)}
+            className={`flex items-center gap-2.5 px-3.5 py-1.5 rounded-full cursor-pointer transition-all ${
+              step === 1 
+                ? 'bg-[#10b981]/15 border border-[#10b981]/40 text-[#10b981] font-semibold text-xs shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
+                : 'bg-[#11192b]/60 border border-slate-800 text-slate-400 font-medium text-xs hover:text-white'
+            }`}
+          >
+            <span className={`w-5 h-5 rounded-full font-bold flex items-center justify-center text-[11px] ${
+              step === 1 ? 'bg-[#10b981] text-[#050811]' : 'bg-slate-700 text-slate-300'
+            }`}>1</span>
+            <span className="tracking-wide">{homeTeam.name || "1. Takım"} Taktiği</span>
           </div>
 
-          <div className="w-12 h-0.5 bg-slate-800 hidden sm:block"></div>
+          {/* Divider line */}
+          <div className="w-6 h-[2px] bg-slate-700/70 rounded-full"></div>
 
-          <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-base font-mono ${
-              step === 2 ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-900/50' : 'bg-slate-800 text-emerald-400'
-            }`}>
-              2
-            </div>
-            <span className={`text-xs font-extrabold ${step === 2 ? 'text-white' : 'text-slate-400'}`}>
-              {awayTeam.name || "2. Takım"} Taktiği
-            </span>
+          {/* Step 2: 2. Takım */}
+          <div 
+            onClick={() => setStep(2)}
+            className={`flex items-center gap-2.5 px-3.5 py-1.5 rounded-full cursor-pointer transition-all ${
+              step === 2 
+                ? 'bg-[#10b981]/15 border border-[#10b981]/40 text-[#10b981] font-semibold text-xs shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
+                : 'bg-[#11192b]/60 border border-slate-800 text-slate-400 font-medium text-xs hover:text-white'
+            }`}
+          >
+            <span className={`w-5 h-5 rounded-full font-bold flex items-center justify-center text-[11px] ${
+              step === 2 ? 'bg-[#10b981] text-[#050811]' : 'bg-slate-700 text-slate-300'
+            }`}>2</span>
+            <span className="tracking-wide">{awayTeam.name || "2. Takım"} Taktiği</span>
           </div>
-        </div>
+        </nav>
 
       </div>
 
@@ -66,19 +76,28 @@ export default function SquadSetupWizard({
             onSwapSquadPlayers={onSwapSquadPlayers}
           />
 
-          <div className="flex justify-end">
+          <footer className="flex items-center justify-between py-2 font-sans">
+            <div className="flex items-center gap-3 text-xs text-slate-400">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10b981]"></span>
+              </span>
+              <span>1. Takım Taktik Hazır: <strong className="text-[#10b981] font-mono">{homeTeam.formation || "4-4-2"}</strong> (11 Oyuncu Seçili)</span>
+            </div>
+
             <button
               onClick={() => setStep(2)}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-8 py-3.5 rounded-xl shadow-xl shadow-emerald-950 flex items-center gap-3 transition-all text-base hover:scale-105"
+              type="button"
+              className="inline-flex items-center gap-3 px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#34d399] hover:to-[#10b981] text-[#050811] font-['Barlow_Condensed'] font-extrabold text-base md:text-lg tracking-wide uppercase transition-all shadow-[0_10px_30px_rgba(16,185,129,0.35)] hover:scale-105 cursor-pointer"
             >
               <span>2. Adıma Geç ({awayTeam.name || "2. Takım"} Taktiği)</span>
               <ArrowRight size={20} />
             </button>
-          </div>
+          </footer>
         </div>
       )}
 
-      {/* STEP 2: DEPLASMAN TAKIMI TAKTİĞİ */}
+      {/* STEP 2: 2. TAKIM TAKTİĞİ */}
       {step === 2 && (
         <div className="space-y-6">
           <TacticalPitchBoard
@@ -88,23 +107,25 @@ export default function SquadSetupWizard({
             onSwapSquadPlayers={onSwapSquadPlayers}
           />
 
-          <div className="flex items-center justify-between">
+          <footer className="flex flex-wrap items-center justify-between gap-4 py-2 font-sans">
             <button
               onClick={() => setStep(1)}
-              className="bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold px-6 py-3 rounded-xl border border-slate-800 flex items-center gap-2 transition-all text-sm"
+              type="button"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#090e1a] hover:bg-[#11192b] text-slate-300 hover:text-white border border-[#1f2d47] font-semibold text-xs transition-all cursor-pointer"
             >
-              <ArrowLeft size={18} />
-              <span>Geri (1. Adım)</span>
+              <ArrowLeft size={16} />
+              <span>Geri (1. Takım Taktiği)</span>
             </button>
 
             <button
               onClick={onStartMatch}
-              className="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black px-10 py-4 rounded-xl shadow-2xl shadow-emerald-950 flex items-center gap-3 transition-all text-lg hover:scale-105"
+              type="button"
+              className="inline-flex items-center gap-3 px-10 py-4 rounded-xl bg-gradient-to-r from-[#10b981] via-[#00f59b] to-[#10b981] hover:from-[#34d399] hover:to-[#00f59b] text-[#050811] font-['Barlow_Condensed'] font-extrabold text-lg md:text-xl uppercase tracking-wider transition-all shadow-[0_10px_35px_rgba(16,185,129,0.5)] hover:scale-105 cursor-pointer"
             >
               <Play size={22} fill="currentColor" />
               <span>⚽ MAÇI BAŞLAT VE SİMÜLE ET</span>
             </button>
-          </div>
+          </footer>
         </div>
       )}
 
