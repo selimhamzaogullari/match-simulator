@@ -3,14 +3,21 @@
 import { FORMATION_LAYOUTS } from "../data/teams";
 import { simulateFullMatch as fallbackSimulateMatch } from "../engine/matchEngine";
 
-const SYSTEM_PROMPT = `CURRENT DATE CONTEXT: Today is September 2026. Evaluate all player ages, career evolutions, prime performance windows, transfers, and real-world abilities relative to 2026.
+function getSystemPrompt() {
+  const currentDateStr = new Date().toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+  const currentYear = new Date().getFullYear();
+
+  return `CURRENT DATE CONTEXT: Today is ${currentDateStr}. Evaluate all player ages, career evolutions, prime performance windows, transfers, and real-world abilities relative to ${currentYear}.
 
 You are a World-Class Turkish Football Match Engine & Commentary Simulator (legendary spiker persona like Yalçın Çetin & Ercan Taner).
 Your task is to simulate a realistic, thrilling, and tactical 90-minute football match between two teams based on their lineups, player real-world skill levels, and tactics.
 
 STRICT INSTRUCTIONS:
 1. Output MUST be a valid JSON object matching the exact schema provided.
-2. Evaluate real-world abilities of all players in both 11-player lineups based on your knowledge of football history, player prime status, and 2026 real-world form.
+2. Evaluate real-world abilities of all players in both 11-player lineups based on your knowledge of football history, player prime status, and ${currentYear} real-world form.
 3. MANDATORY EVENT QUANTITY CONSTRAINT: You MUST generate BETWEEN 18 AND 25 timeline items across the 90 minutes of the match. NEVER return fewer than 18 events!
 4. MANDATORY EVENT TYPE DIVERSITY: Distribute the 18-25 events dynamically using a realistic mix:
    - 6 to 10 Shots / Saves / Misses / Post hits ("SAVE", "MISS", "POST")
@@ -89,10 +96,12 @@ JSON SCHEMA REQUIREMENT:
     "away": [{ "name": "string", "pos": "string", "rating": number, "goals": number, "assists": number }]
   }
 }`;
+}
 
 export async function simulateMatchWithOpenAI(homeTeam, awayTeam) {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  const modelName = import.meta.env.VITE_OPENAI_MODEL || "gpt-4o";
+  const modelName = import.meta.env.VITE_OPENAI_MODEL || "gpt-5.4-mini";
+  const systemPrompt = getSystemPrompt();
 
   // API Key kontrolü - Eğer tanımlı değilse veya varsayılansa yerel motor çalışır
   if (!apiKey || apiKey === "your_openai_api_key_here") {
@@ -136,7 +145,7 @@ CRITICAL: Generate BETWEEN 18 AND 25 dynamic timeline events spanning minute 1 t
       body: JSON.stringify({
         model: modelName,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
