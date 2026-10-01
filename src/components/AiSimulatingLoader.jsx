@@ -91,13 +91,6 @@ export default function AiSimulatingLoader({
 
         {/* MAIN HEADING SECTION */}
         <div className="my-5 w-full">
-          {/* Top Engine Badge */}
-          <div className="mb-3">
-            <span className="inline-block text-xs font-mono font-bold tracking-widest text-[#38bdf8] uppercase bg-[#38bdf8]/10 border border-[#38bdf8]/30 px-3.5 py-1.5 rounded-full shadow-sm">
-              ChatGPT OpenAI GPT-4o Engine
-            </span>
-          </div>
-
           {/* Main Title */}
           <h1 className="text-3xl md:text-5xl font-['Barlow_Condensed'] font-extrabold tracking-wide uppercase text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.35)] leading-tight my-4">
             MAÇ BAŞLAMAK ÜZERE

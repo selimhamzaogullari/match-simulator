@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import {
   Plus,
-  ArrowRight,
   Zap,
   Trash2,
   Edit3,
-  CheckCircle2,
   Users,
   UserPlus,
   Lock,

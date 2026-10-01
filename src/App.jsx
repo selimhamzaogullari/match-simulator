@@ -5,15 +5,6 @@ import DraftPickScreen from "./components/DraftPickScreen";
 import SquadSetupWizard from "./components/SquadSetupWizard";
 import AiSimulatingLoader from "./components/AiSimulatingLoader";
 import Cm0102MatchView from "./components/Cm0102MatchView";
-import {
-  PlayCircle,
-  BarChart2,
-  MessageSquare,
-  Award,
-  Settings,
-  Sparkles,
-  Search,
-} from "lucide-react";
 
 export default function App() {
   // Akış Modu: 'draft' (1. Ekran Oyuncu Arama & Seçim) -> 'tactics' (2. Ekran Taktik & Diziliş) -> 'match' (3. Ekran Saf Maç)
@@ -233,9 +224,6 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <span className="font-athletic font-extrabold text-2xl tracking-wider uppercase text-white">
                   TACTICAL MATCH PULSE
-                </span>
-                <span className="hidden sm:inline-block text-[10px] bg-amber-accent/20 text-amber-glow font-mono px-2 py-0.5 rounded-full border border-amber-accent/40">
-                  OpenAI GPT-4o
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-mono tracking-tight">
