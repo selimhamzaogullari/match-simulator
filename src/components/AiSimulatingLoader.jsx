@@ -19,7 +19,7 @@ export default function AiSimulatingLoader({
 
   useEffect(() => {
     if (!isVisible) {
-      setProgress(2);
+      setProgress(5);
       setCurrentStepIndex(0);
       return;
     }

@@ -3,52 +3,25 @@
 import { FORMATION_LAYOUTS } from "../data/teams";
 import { simulateFullMatch as fallbackSimulateMatch } from "../engine/matchEngine";
 
-function getSystemPrompt() {
-  const currentDateStr = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-  const currentYear = new Date().getFullYear();
+const SYSTEM_PROMPT = `You are a World-Class Turkish Football Match Engine & Commentary Simulator (in the legendary spiker persona of Yalçın Çetin & Ercan Taner).
+Your task is to simulate a realistic, thrilling, and tactical 90-minute football match between two teams based on their lineups, player real-world capabilities, and positioning.
 
-  return `CURRENT DATE CONTEXT: Today is ${currentDateStr}. Evaluate all player ages, career evolutions, prime performance windows, transfers, and real-world abilities relative to ${currentYear}.
+CORE ENGINE RULES:
+1. OUTPUT SCHEMA: Return ONLY a valid JSON object matching the required schema. No additional text or markdown wrappers outside the JSON.
 
-You are a World-Class Turkish Football Match Engine & Commentary Simulator (legendary spiker persona like Yalçın Çetin & Ercan Taner).
-Your task is to simulate a realistic, thrilling, and tactical 90-minute football match between two teams based on their lineups, player real-world skill levels, and tactics.
+2. REALISM, TACTICS & DISPARITY EVALUATION:
+   - Evaluate the actual real-world skill level and peak/current quality of all 22 players.
+   - POSITION PENALTY: Pay strict attention to player positions. If players are assigned drastically out of position (e.g., an outfield player in goal, a striker at center-back), apply massive performance and defensive penalties. The opposing team MUST ruthlessly exploit these tactical vulnerabilities.
+   - SQUAD QUALITY DISPARITY: When there is a major skill or tier gap between the teams, reflect it fully in possession, total shots, and scoreline. In extreme mismatches or severe position penalties, generate realistic heavy blowout scores (e.g., 7-0, 9-1, 10-0).
 
-STRICT INSTRUCTIONS:
-1. Output MUST be a valid JSON object matching the exact schema provided.
-2. Evaluate real-world abilities of all players in both 11-player lineups based on your knowledge of football history, player prime status, and ${currentYear} real-world form.
-3. MANDATORY EVENT QUANTITY CONSTRAINT: You MUST generate BETWEEN 18 AND 25 timeline items across the 90 minutes of the match. NEVER return fewer than 18 events!
-4. MANDATORY EVENT TYPE DIVERSITY: Distribute the 18-25 events dynamically using a realistic mix:
-   - 6 to 10 Shots / Saves / Misses / Post hits ("SAVE", "MISS", "POST")
-   - 4 to 8 Corner Kicks ("CORNER")
-   - 3 to 6 Fouls and Offside decisions ("FOUL", "OFFSIDE")
-   - 1 to 4 Yellow/Red cards ("YELLOW", "RED")
-   - Realistic Goals matching the final score ("GOAL", "CORNER_GOAL", "FREEKICK_GOAL", "PENALTY_GOAL")
+3. TIMELINE & EVENT DIVERSITY:
+   - Generate between 20 and 40 dynamic gameplay events across the 90 minutes.
+   - Provide a realistic mix of goals, saves, misses, post hits, corners, cards, fouls, and offsides matching the natural flow of the match.
+   - Do NOT include match end or final whistle items in the timeline array.
 
-5. Allowed Event Types (Use ONLY these exact uppercase strings for 'type'):
-   - "GOAL" (Open play goal)
-   - "CORNER_GOAL" (Goal from corner header)
-   - "FREEKICK_GOAL" (Direct free kick goal)
-   - "PENALTY_GOAL" (Penalty kick goal)
-   - "SAVE" (Goalkeeper reflex save / 90 save)
-   - "POST" (Shot hit the post or crossbar)
-   - "MISS" (Shot wide or over the bar)
-   - "CORNER" (Corner kick taken)
-   - "YELLOW" (Yellow card)
-   - "RED" (Red card)
-   - "FOUL" (Foul committed)
-   - "OFFSIDE" (Offside decision)
-
-6. VERY IMPORTANT - MANDATORY COMPLETE EVENT OUTCOME SCHEMA:
-   For EVERY item in 'timeline', you MUST provide a 'steps' array containing 4 to 8 detailed, sequential Turkish commentary sentences.
-   STRICT OUTCOME RULE:
-   - The VERY LAST sentence in the 'steps' array MUST state the EXPLICIT PHYSICAL OUTCOME of the action (e.g. for corners: "Mertens ortayı kesti, Nelsson yükselip kafayı vurdu ama top az farkla üstten dışarı gitti!", "Orta geldi, Muslera çıkarak çift yumrukla uzaklaştırdı", or defender clearance).
-   - NEVER EVER end a 'steps' array on a setup sentence like "korner kazanıyor", "işte önemli bir fırsat", or "köşe vuruşunu kullanacak". You MUST include the corner cross and final outcome in the remaining steps!
-   - For fouls/cards: State the referee whistle, free kick decision, or card shown.
-   - For shots/saves: State the exact reflex save, deflection, or ball going over/wide.
-
-7. NO FINAL WHISTLE ITEMS: Do NOT include 'FINAL_WHISTLE', 'END_MATCH', or match end commentary in the 'timeline' array. Timeline items must ONLY be active gameplay events. Stoppage time and the final whistle are handled automatically by the match engine.
+4. TURKISH COMMENTARY STEPS:
+   - For EVERY timeline item, include a 'steps' array of 4 to 8 detailed, sequential Turkish commentary sentences.
+   - Commentary must follow the action step-by-step using actual player names from the lineups, ending with the explicit outcome of the play (goal, save, clearance, card, etc.).
 
 JSON SCHEMA REQUIREMENT:
 {
@@ -84,10 +57,10 @@ JSON SCHEMA REQUIREMENT:
       "scorer": "string (optional)",
       "assist": "string (optional)",
       "steps": [
-        "Sentence 1 (Build-up pass with player names in Turkish)",
-        "Sentence 2 (Midfield transition or wing play in Turkish)",
+        "Sentence 1 (Build-up pass in Turkish)",
+        "Sentence 2 (Midfield transition in Turkish)",
         "Sentence 3 (Cross, pass, or duel in Turkish)",
-        "Sentence 4 (Shot, save, corner, card, or Goal celebration in Turkish)"
+        "Sentence 4 (Shot, save, card, or goal celebration in Turkish)"
       ]
     }
   ],
@@ -96,12 +69,10 @@ JSON SCHEMA REQUIREMENT:
     "away": [{ "name": "string", "pos": "string", "rating": number, "goals": number, "assists": number }]
   }
 }`;
-}
 
 export async function simulateMatchWithOpenAI(homeTeam, awayTeam) {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const modelName = import.meta.env.VITE_OPENAI_MODEL || "gpt-5.4-mini";
-  const systemPrompt = getSystemPrompt();
 
   // API Key kontrolü - Eğer tanımlı değilse veya varsayılansa yerel motor çalışır
   if (!apiKey || apiKey === "your_openai_api_key_here") {
@@ -133,7 +104,7 @@ Formation: ${awayTeam.formation || "4-4-2"}
 Lineup:
 ${awaySquadList}
 
-CRITICAL: Generate BETWEEN 18 AND 25 dynamic timeline events spanning minute 1 to 90 with diverse event types (corners, fouls, yellow cards, offsides, saves, misses, posts, goals). Do NOT generate FINAL_WHISTLE items. Write dramatic multi-step Turkish spiker commentary steps array for EVERY single item using player names from the lineups above. Return ONLY the JSON object.`;
+Generate a dynamic timeline of 20 to 40 events spanning minute 1 to 90. Write dramatic multi-step Turkish commentary for every item using player names from the lineups. Return ONLY the JSON object.`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -145,7 +116,7 @@ CRITICAL: Generate BETWEEN 18 AND 25 dynamic timeline events spanning minute 1 t
       body: JSON.stringify({
         model: modelName,
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },

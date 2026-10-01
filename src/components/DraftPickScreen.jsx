@@ -419,9 +419,6 @@ export default function DraftPickScreen({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="hidden sm:inline text-[11px] font-mono text-slate-500">
-                      Kondisyon: 98%
-                    </span>
                     <button
                       onClick={() => onRemovePlayerFromTeam("home", player.id)}
                       type="button"
@@ -594,9 +591,6 @@ export default function DraftPickScreen({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="hidden sm:inline text-[11px] font-mono text-slate-500">
-                      Kondisyon: 98%
-                    </span>
                     <button
                       onClick={() => onRemovePlayerFromTeam("away", player.id)}
                       type="button"
